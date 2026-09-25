@@ -259,7 +259,7 @@ let defaultTrayIcon: ReturnType<typeof getTrayIcon> | null = null;
 let recordingTrayIcon: ReturnType<typeof getTrayIcon> | null = null;
 
 function getPlatformAppIconFilename(size: 32 | 128 | 512) {
-	const baseName = process.platform === "darwin" ? "recordlymac" : "recordly";
+	const baseName = process.platform === "darwin" ? "screenlymac" : "screenly";
 	return `app-icons/${baseName}-${size}.png`;
 }
 
@@ -914,7 +914,7 @@ app.whenReady().then(async () => {
 	if (startupAuthCallback) authCallbacks.dispatch(startupAuthCallback);
 
 	if (process.platform === "win32") {
-		app.setAppUserModelId("dev.recordly.app");
+		app.setAppUserModelId("app.screenly.desktop");
 	}
 
 	session.defaultSession.setPermissionCheckHandler(
