@@ -13,7 +13,7 @@ type Range = { startMs: number; endMs: number };
 const rangesPath = (video: string) => `${video}.webcam-ranges.json`;
 export const sequenceWebcamOutputs = (video: string) => [
 	video.replace(/\.mp4$/, "-webcam.mp4"),
-	video.replace(/\.mp4$/, ".recordly-session.json"),
+	video.replace(/\.mp4$/, ".screenly-session.json"),
 	rangesPath(video),
 ];
 async function linked(video: string): Promise<RecordingWebcamSource | undefined> {

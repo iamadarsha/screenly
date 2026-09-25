@@ -8,7 +8,7 @@ import {
 	getHudOverlayWindow,
 	reassertHudOverlayMousePassthrough,
 } from "../../windows";
-import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
+import { ALLOW_SCREENLY_WINDOW_CAPTURE } from "../constants";
 import {
 	getNativeMacWindowSources,
 	resolveLinuxWindowBounds,
@@ -233,7 +233,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_SCREENLY_WINDOW_CAPTURE && normalizedName.includes("screenly")) {
 						return true;
 					}
 
@@ -281,7 +281,7 @@ export function registerSourceHandlers({
 					const normalizedAppName = normalizeDesktopSourceName(source.appName ?? "");
 
 					if (
-						!ALLOW_RECORDLY_WINDOW_CAPTURE &&
+						!ALLOW_SCREENLY_WINDOW_CAPTURE &&
 						normalizedAppName &&
 						normalizedAppName === ownAppName
 					) {
@@ -289,9 +289,9 @@ export function registerSourceHandlers({
 					}
 
 					if (
-						ALLOW_RECORDLY_WINDOW_CAPTURE &&
-						(normalizedAppName === "recordly" ||
-							normalizedWindowName?.includes("recordly"))
+						ALLOW_SCREENLY_WINDOW_CAPTURE &&
+						(normalizedAppName === "screenly" ||
+							normalizedWindowName?.includes("screenly"))
 					) {
 						return true;
 					}
@@ -350,7 +350,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_SCREENLY_WINDOW_CAPTURE && normalizedName.includes("screenly")) {
 						return true;
 					}
 

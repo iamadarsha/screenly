@@ -45,7 +45,7 @@ export function DashboardSidebar({
 			>
 				<div className="mb-4 flex h-10 items-center gap-2.5 px-3">
 					<img
-						src={`${import.meta.env.BASE_URL}app-icons/recordly-64.png`}
+						src={`${import.meta.env.BASE_URL}app-icons/screenly-64.png`}
 						alt=""
 						className="size-7 rounded-lg"
 					/>

@@ -1,15 +1,15 @@
 {
-	"name": "recordly",
-	"productName": "Recordly",
-	"description": "A free, creator-focused screen recorder with auto-zoom, cursor effects, backgrounds, annotations, and more - built for polished videos out of the box.",
-	"author": "webadderall",
-	"homepage": "https://github.com/webadderallorg/Recordly",
+	"name": "screenly",
+	"productName": "Screenly",
+	"description": "Record. Explain. Share. Effortlessly. A local-first screen recording, editing, AI and publishing app with auto-zoom, cursor effects, backgrounds, annotations, and more.",
+	"author": "iamadarsha",
+	"homepage": "https://github.com/iamadarsha/screenly",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/webadderallorg/Recordly.git"
+		"url": "https://github.com/iamadarsha/screenly.git"
 	},
 	"bugs": {
-		"url": "https://github.com/webadderallorg/Recordly/issues"
+		"url": "https://github.com/iamadarsha/screenly/issues"
 	},
 	"private": true,
 	"version": "1.4.0",

@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="10%" y1="0%" x2="95%" y2="100%">
+      <stop offset="0%" stop-color="#2FC2F4"/>
+      <stop offset="30%" stop-color="#5B6BF0"/>
+      <stop offset="55%" stop-color="#9B4FE8"/>
+      <stop offset="75%" stop-color="#E8479B"/>
+      <stop offset="100%" stop-color="#F5A623"/>
+    </linearGradient>
+    <radialGradient id="dotg" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#FF9A6B"/>
+      <stop offset="55%" stop-color="#F4526B"/>
+      <stop offset="100%" stop-color="#E23A6E"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+  <path d="M 322 118
+           C 278 92, 204 96, 182 140
+           C 164 176, 182 202, 222 220
+           L 276 244
+           C 310 260, 328 284, 310 318
+           C 288 358, 214 356, 176 328"
+        fill="none" stroke="url(#g)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 322 118
+           C 278 92, 204 96, 182 140
+           C 164 176, 182 202, 222 220
+           L 276 244
+           C 310 260, 328 284, 310 318
+           C 288 358, 214 356, 176 328"
+        fill="none" stroke="url(#sheen)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+  <circle cx="352" cy="112" r="26" fill="url(#dotg)"/>
+</svg>

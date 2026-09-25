@@ -15,7 +15,7 @@ import {
 import { getHudCaptureExcludedProcessIds } from "../../../src/lib/hudCaptureProtection";
 import { showCursor } from "../../cursorHider";
 import { getHudOverlayCaptureProtectionEnabled, beginHudCaptureProtection } from "../../windows";
-import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
+import { ALLOW_SCREENLY_WINDOW_CAPTURE } from "../constants";
 import { startWindowBoundsCapture, stopWindowBoundsCapture } from "../cursor/bounds";
 import { startInteractionCapture, stopInteractionCapture } from "../cursor/interaction";
 import { startNativeCursorMonitor, stopNativeCursorMonitor } from "../cursor/monitor";
@@ -330,7 +330,7 @@ async function getSystemCursorAssets() {
 		sourcePath,
 		getSystemCursorHelperBinaryPath(),
 		"system cursor helper",
-		"recordly-system-cursors",
+		"screenly-system-cursors",
 	);
 	const { stdout } = await execFileAsync(binaryPath, [], {
 		timeout: 15000,
@@ -446,7 +446,7 @@ export function registerRecordingHandlers(
 					const outputPath = path.join(recordingsDir, `recording-${timestamp}.mp4`);
 					tempVideoPath = path.join(
 						app.getPath("temp"),
-						`recordly-native-${timestamp}.mp4`,
+						`screenly-native-${timestamp}.mp4`,
 					);
 
 					let captureOutput = "";
@@ -510,7 +510,7 @@ export function registerRecordingHandlers(
 						);
 						tempSystemAudioPath = path.join(
 							app.getPath("temp"),
-							`recordly-native-${timestamp}.system.wav`,
+							`screenly-native-${timestamp}.system.wav`,
 						);
 						config.captureSystemAudio = true;
 						config.audioOutputPath = tempSystemAudioPath;
@@ -523,7 +523,7 @@ export function registerRecordingHandlers(
 						microphonePath = path.join(recordingsDir, `recording-${timestamp}.mic.wav`);
 						tempMicPath = path.join(
 							app.getPath("temp"),
-							`recordly-native-${timestamp}.mic.wav`,
+							`screenly-native-${timestamp}.mic.wav`,
 						);
 						config.captureMic = true;
 						config.micOutputPath = tempMicPath;
@@ -705,10 +705,10 @@ export function registerRecordingHandlers(
 				const appName = normalizeDesktopSourceName(String(source?.appName ?? ""));
 				const ownAppName = normalizeDesktopSourceName(app.getName());
 				if (
-					!ALLOW_RECORDLY_WINDOW_CAPTURE &&
+					!ALLOW_SCREENLY_WINDOW_CAPTURE &&
 					source?.id?.startsWith("window:") &&
 					appName &&
-					(appName === ownAppName || appName === "recordly")
+					(appName === ownAppName || appName === "screenly")
 				) {
 					return {
 						success: false,

@@ -183,7 +183,7 @@ export function RecordlySignInDialog({
 											aria-label="Recordly"
 										>
 											<img
-												src={`${import.meta.env.BASE_URL}app-icons/recordly-128.png`}
+												src={`${import.meta.env.BASE_URL}app-icons/screenly-128.png`}
 												alt=""
 												className="size-12 rounded-xl"
 											/>

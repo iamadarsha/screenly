@@ -49,3 +49,6 @@ gpu-export-probe.mp4
 # Browser test output
 test-results/
 playwright-report/
+
+# Disposable research/scratch (cloned reference repos, icon drafts, etc.)
+.research/
