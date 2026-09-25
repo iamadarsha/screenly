@@ -180,7 +180,7 @@ export function RecordlySignInDialog({
 									<Modal.Header className="items-center gap-4 text-center">
 										<div
 											className="flex items-center gap-3"
-											aria-label="Recordly"
+											aria-label="Screenly"
 										>
 											<img
 												src={`${import.meta.env.BASE_URL}app-icons/screenly-128.png`}
@@ -188,7 +188,7 @@ export function RecordlySignInDialog({
 												className="size-12 rounded-xl"
 											/>
 											<span className="text-3xl font-semibold tracking-tight">
-												Recordly
+												Screenly
 											</span>
 										</div>
 										<Modal.Heading className="whitespace-nowrap text-[clamp(12px,5cqw,22px)] font-semibold leading-tight tracking-tight">
