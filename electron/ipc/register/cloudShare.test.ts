@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeCloudEndpoint, parseCloudShareTicket } from "../cloudShareContract";
 
 describe("cloud share contract", () => {
-	it("accepts only Recordly production and local development endpoints", () => {
+	it("accepts only Screenly production and local development endpoints", () => {
 		expect(normalizeCloudEndpoint("https://videos.recordly.dev/api/upload#ignored")).toBe(
 			"https://videos.recordly.dev/api/upload",
 		);
@@ -30,10 +30,10 @@ describe("cloud share contract", () => {
 
 	it("rejects insecure and untrusted remote endpoints", () => {
 		expect(() => normalizeCloudEndpoint("http://share.example.com/api/shares")).toThrow(
-			"only allowed through the Recordly service",
+			"only allowed through the Screenly service",
 		);
 		expect(() => normalizeCloudEndpoint("https://share.example.com/api/upload")).toThrow(
-			"only allowed through the Recordly service",
+			"only allowed through the Screenly service",
 		);
 		expect(() => normalizeCloudEndpoint("https://videos.recordly.dev/api/other")).toThrow(
 			"endpoint is invalid",
