@@ -1,22 +1,31 @@
 # SCREENLY Regression Matrix
 
-## Status as of 2026-09-25 (Phase 1, partial)
+## Status as of 2026-09-26 (end of session)
 
 | Check | Status | Notes |
 |---|---|---|
-| `npm install` | ✅ PASS | clean install, 0 vulnerabilities reported inline |
-| `npm run typecheck` | ✅ PASS | 0 errors, before and after identity rename |
-| `npm run lint` (biome) | ✅ PASS | 1 pre-existing warning, unrelated to this session's changes (`ProjectThumbnail.tsx:21`) |
-| `npm run test` (vitest) | ✅ PASS | 161 files / 1396 tests, 0 failures after fix (see below) |
+| `npm install` | ✅ PASS | clean install |
+| `npm run typecheck` | ✅ PASS | 0 errors, re-verified after every commit this session |
+| `npm run lint` (biome) | ✅ PASS | 1 pre-existing warning, unrelated (`ProjectThumbnail.tsx:21`) |
+| `npm run test` (vitest) | ✅ PASS | 161 files / 1396 tests, re-verified after every commit this session |
+| `npm run i18n:check` | ✅ PASS | locale files structurally consistent across all 11 languages |
 | `npm run test:ui` (playwright) | ⬜ NOT RUN | needs a display/UI environment; not attempted this session |
-| `npm run build` (full, incl. native helpers + electron-builder dmg) | ⬜ NOT RUN | native helper compilation (whisper runtime, Windows GPU export, NVIDIA CUDA compositor, cursor monitor) is slow and platform-specific; not attempted this session |
-| App launches (`npm run dev`) | ⬜ NOT VERIFIED | no manual smoke test performed this session |
-| Record → edit → export smoke flow | ⬜ NOT VERIFIED | requires the app running with real capture devices |
+| `npm run build:mac` (full, incl. native helpers + electron-builder dmg) | ✅ PASS | ran successfully **7 times** this session (each time to verify a string-cleanup fix); produces both `Screenly-arm64.dmg` and `Screenly-x64.dmg` |
+| `npm run build:win` | ⬜ NOT RUN | no Windows machine available this session |
+| App launches | ✅ VERIFIED | launched the actual built `.app`, screenshotted: menu bar reads "Screenly", icon correct, HUD renders |
+| Screen recording permission flow | ✅ VERIFIED | triggered a real macOS permission dialog; text correctly said "Screenly" (this is what caught the very first branding bug this session) |
+| Record → edit → export smoke flow | ✅ VERIFIED (by operator) | operator used the built app directly: **"features are working but very laggy."** Functional, not blocked — performance is the open issue, tracked in `SCREENLY_EXECUTION_STATE.md`, explicitly deferred by operator instruction |
+| Compiled bundle free of old branding | ✅ VERIFIED | `strings app.asar \| grep -c Recordly` reached 0 after 7 build→fix cycles |
 
-## Regression caught and fixed during this session
-- Renaming `RECORDING_SESSION_MANIFEST_SUFFIX` (`electron/ipc/constants.ts`) from `.recordly-session.json` to `.screenly-session.json` broke `electron/ipc/recording/library.test.ts` because four other files independently hardcoded the same string instead of importing the constant (`library.ts`, `importRecording.ts`, `sequenceWebcam.ts`, `sequenceSource.ts`), plus their tests. Fixed by renaming all producers/consumers consistently and re-running the full suite (green). This is a pre-existing duplication in the codebase (the constant isn't the single source of truth) — worth a real fix later, not attempted here per "no unnecessary rewrite."
+## Regressions caught and fixed during this session
+1. Renaming `RECORDING_SESSION_MANIFEST_SUFFIX` broke `library.test.ts` because four other files hardcoded the same string independently instead of importing the constant. Fixed by renaming all producers/consumers together.
+2. Renaming permission-dialog/export-error copy broke two test assertions (`cloudShare.test.ts`, `modernVideoExporter.fallback.test.ts`) that checked exact old string content. Fixed the assertions to match.
+3. Neither regression was caught by `grep` alone before building — both were only found by running the actual test suite / launching the actual app. Same lesson as the branding-string hunt: **verify the compiled/running artifact, not just the source.**
 
-## What must be re-run before Phase 1 is declared complete
-1. Full suite again after the remaining UI-string rename pass.
-2. `npm run build:mac` (and `build:win` if targeting Windows) to confirm the app actually packages and the new icon set renders correctly in a real dmg/exe.
-3. Manual smoke: launch → record (screen only) → stop → open in editor → export MP4. This is the PRD's stated Phase 1 acceptance bar ("existing recording works", "existing editor works", "existing export works") and has not been verified this session.
+## Known non-blocking issue (not a regression, tracked for later)
+Performance: operator reports the running app feels "very laggy" during actual use. Not investigated yet — deferred per explicit operator instruction to finish building phases first. Starting point when picked up: PRD §20, and the `EditorWindow-*.js` chunk that vite consistently flags as >1000kB in every build log this session.
+
+## What must happen before Phase 1 is declared fully complete
+1. `npm run build:win` on a Windows machine/CI runner.
+2. Decide on code signing / notarization before any public distribution (current dmgs are dev-signed only).
+3. Everything else in the "Deliberately NOT done" list in `SCREENLY_EXECUTION_STATE.md` is an explicit scope decision, not a gap to close reflexively — re-check with the operator before doing any of it.

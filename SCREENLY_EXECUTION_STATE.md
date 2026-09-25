@@ -1,59 +1,39 @@
 # SCREENLY Execution State
 
-Last updated: 2026-09-25 (Phase 1, in progress)
+Last updated: 2026-09-26 (Phase 1, identity/rebrand essentially done; resuming next session)
 
 ## Current phase
-**Phase 1 — Foundation, Audit, Identity, Assets** (in progress, not yet gated)
+**Phase 1 — Foundation, Audit, Identity, Assets.** The identity/rebrand slice is done and verified against a real running app. Phase 1's remaining items (below) are mostly deferred by deliberate choice, not oversight. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish Phase 1 further unless something is actually broken.
 
 ## Environment
-- Working dir: `/Users/iamadarsha/Screenly` (was an ungitted Recordly working folder; `git init` run, baseline committed)
-- Node v24.14.0 / npm 11.9.0
-- Primary target confirmed by operator: a signed-or-unsigned dmg (mac) / exe or nsis installer (win), installable via a GitHub release, built from this Electron + Vite + React 19 codebase.
-- GitHub target repo: `iamadarsha/screenly` — created (private) and this history pushed to `main` this session. `gh` CLI is authenticated as `iamadarsha`.
-- Bundle/app id chosen: `app.screenly.desktop`.
+- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 13 commits.
+- Node v24.14.0 / npm 11.9.0. `gh` CLI authenticated as `iamadarsha`.
+- Bundle id: `app.screenly.desktop`. Protocol scheme: `screenly://`.
+- Primary target: signed dmg (mac) / exe (win) installable via GitHub release.
 
-## Baseline (recorded before any code changes, commit `c285401`)
-- `npm install`: not previously run (`node_modules` was empty) — now installed clean.
-- `npm run typecheck`: PASS (0 errors)
-- `npm run lint` (biome): PASS, 1 pre-existing warning (`src/components/video-editor/dashboard/ProjectThumbnail.tsx:21`, useExhaustiveDependencies) — not touched, not related to rebrand.
-- `npm run test` (vitest): 161 files / 1396 tests, ALL PASS after the identity rename below (one test broke transiently mid-rename and was fixed — see Decisions log).
-- `npm run test:ui` (playwright) / full `npm run build` (native helpers + electron-builder): **not run this session** — native helper builds (whisper runtime, Windows GPU export, NVIDIA CUDA compositor, cursor monitor) are slow/platform-specific and out of scope for a first identity pass. Must be run before any Phase 1 sign-off that claims "app still launches" / "export works".
+## What is actually done and verified (don't redo this)
+1. **Release/packaging identity**: `package.json`, `electron-builder.json5` (appId, productName, protocol, GitHub publish target, macOS Info.plist strings, Windows names), `screenly.rb` Homebrew cask (sha256 placeholders pending a real release).
+2. **App icon**: hand-built SVG (`branding/source-assets/Screenly.svg`) matching the supplied brand guideline, refined against operator-supplied reference logo renders, rasterized into the full icns/ico/PNG set. Confirmed rendering correctly in a real launched app (see below).
+3. **Core runtime identity**: window title, project file extension (`.screenly`, with `.recordly` kept in `LEGACY_PROJECT_FILE_EXTENSIONS` so old projects still open), session-manifest/trash/media-dir naming, tray tooltip, OAuth callback scheme and landing page, updater messages, project save/open dialogs, export error messages, auth error messages, cloud-share error copy, the full 11-language i18n locale system, announcements feed URL.
+4. **Verification method that actually worked**: static grepping alone repeatedly missed real strings (i18n fallback defaults, duplicate literals in main-process vs renderer, a second/third copy of the same sentence). What worked: run `npm run build:mac`, then `strings release/mac-arm64/Screenly.app/Contents/Resources/app.asar | grep -c Recordly`, fix whatever surfaces, rebuild, repeat. Took **7 build cycles** to reach zero. **Use this technique again for any future "make sure X is really gone/present" question** — don't trust source grep alone for a compiled Electron app.
+5. **Two real signed dmgs exist right now**: `release/Screenly-arm64.dmg` (203M), `release/Screenly-x64.dmg` (208M). Signed with a local Apple Development identity (ad-hoc/dev signing, NOT notarized — fine for local testing, not for public distribution).
+6. **App launches and was screenshotted**: menu bar correctly reads "Screenly", compact recorder HUD renders correctly, icon correct.
+7. Every change verified against the full baseline: `npm run typecheck` (clean), `npm run lint` (clean, 1 pre-existing unrelated warning), `npm run test` (1396/1396 passing throughout).
 
-## What was actually completed this session (Phase 1, partial)
-1. `git init` + baseline commit of the untouched Recordly folder (commit `c285401`), so all rebrand work is reviewable as a diff.
-2. Read and internalized the full PRD (`SCREENLY_END_TO_END_PRD_CLAUDE_CODE_PROMPT_v3.md`) and the supplied brand kit (`SCREENLY_Brand_Kit_Concept_2/`: `SCREENLY_Brand_UI_Guidelines.md`, `screenly-design-tokens.json`, `screenly-design-tokens.css`, visual board, 4 ChatGPT concept renders).
-3. **Release/packaging identity** (PRD §24) rebranded end to end:
-   - `package.json`: name/productName/description/author/homepage/repository/bugs → screenly / iamadarsha/screenly.
-   - `electron-builder.json5`: appId → `app.screenly.desktop`, productName → Screenly, protocol scheme `screenly://`, publish target `iamadarsha/screenly`, macOS Info.plist strings (usage descriptions, document type, UTI), Windows executable/shortcut names.
-   - `screenly.rb` (renamed from `recordly.rb`): Homebrew cask renamed; `sha256` fields are placeholders (`:no_check`) until a real release exists.
-4. **App identity / runtime branding**:
-   - `index.html` title + favicon path.
-   - `electron/appPaths.ts`: dev userData dir `Recordly-dev` → `Screenly-dev`.
-   - `electron/ipc/constants.ts`: `PROJECT_FILE_EXTENSION` → `"screenly"` (with `"recordly"` added to `LEGACY_PROJECT_FILE_EXTENSIONS` so old `.recordly` project files still open — no silent corruption, per PRD §1.4/§25 Phase-1 rule), `ALLOW_RECORDLY_WINDOW_CAPTURE` → `ALLOW_SCREENLY_WINDOW_CAPTURE`, session manifest suffix `.recordly-session.json` → `.screenly-session.json`.
-   - Consistently propagated the manifest/trash/media-dir naming rename across every producer/consumer that had it hardcoded a second time outside the constant: `electron/ipc/register/sources.ts`, `electron/ipc/register/recording.ts`, `electron/ipc/recording/library.ts`, `electron/ipc/recording/importRecording.ts`, `electron/ipc/recording/sequenceWebcam.ts`, `electron/ipc/recording/sequenceSource.ts`, plus their tests (`library.test.ts`, `manager.test.ts`, `mediaServer.test.ts`). Full suite re-verified green after this.
-   - App icon references (`src/App.tsx`, `src/components/video-editor/dashboard/DashboardSidebar.tsx`, `src/components/auth/RecordlySignInDialog.tsx`) point at new `screenly-*.png` assets.
-5. **App icon set generated from the brand kit**, not fabricated from scratch: the brand guideline's "flowing S ribbon + red recording dot" mark was built as a proper SVG (`branding/source-assets/Screenly.svg`) using the exact gradient/colors from `screenly-design-tokens.json`, then rasterized (via macOS QuickLook + Pillow, no external SVG tooling was available) into:
-   - `icons/icons/png/{16..1024}.png` (electron-builder Linux source)
-   - `icons/icons/mac/icon.icns` (rebuilt via `iconutil`)
-   - `icons/icons/win/icon.ico` (multi-size, via Pillow)
-   - `public/app-icons/screenly-{16..1024}.png` and `screenlymac-*` variants (renderer/runtime use)
-   - Old `recordly-*`/`recordlymac-*` PNGs and `Recordly.svg`/`recordlygeneric.svg` deleted.
-6. `.gitignore`: added `.research/` (scratch/reference dir, matches PRD §3.1 convention).
-7. Baseline verified again after all changes: typecheck clean, lint clean (same 1 pre-existing warning), **1396/1396 tests pass**.
+## Deliberately NOT done (documented reasoning, not oversights — see SCREENLY_UI_INVENTORY.md for full detail)
+- `services/recordly-share/` — a live deployed Cloudflare Worker. Operator explicitly said leave it alone.
+- Native capture helper toolchain internal naming (`electron/native/bin/recordly-*`, Swift/C++/PowerShell producer scripts, `electron/ipc/paths/binaries.ts`) — zero user visibility, real regression risk to the core recording feature if renamed incompletely.
+- `src/lib/auth/{recordlyAuth.ts,useRecordlyAuth.ts,RecordlySignInDialog.tsx}` **filenames/symbol names** — the actual user-visible text inside them (dialog heading, aria-labels, error message) IS fixed; only the filenames/internal identifiers still say Recordly. Cosmetic refactor, no functional or user-visible effect.
+- Full SCREENLY visual re-theme (`screenly-design-tokens.css` wired into components, Liquid Glass system) — this is PRD Phase 5, not Phase 1. Don't start it prematurely.
+- Windows build (`npm run build:win`) — not attempted this session (dev machine is macOS). Will need a Windows machine or CI runner.
+- Code signing / notarization for real public distribution — current dmgs are dev-signed only.
 
-## What Phase 1 still requires (NOT done — do not claim otherwise)
-This is the big remaining piece. `grep -rli recordly` still matches ~180 files. The rest fall into these buckets — see `SCREENLY_UI_INVENTORY.md` for the live list:
-- **Must keep** (legal): `LICENSE.md`, `THIRD_PARTY_NOTICES.md`, `CONTRIBUTING.md` attribution lines, git history. Do not touch.
-- **User-facing product strings not yet renamed**: onboarding, settings, editor headings, toasts, dialog titles, empty states — largely untouched. `src/contexts/I18nContext.tsx`, `src/components/video-editor/layout/*`, `src/components/video-editor/dashboard/*`, `TutorialHelp.tsx`, `FeedbackDialog.tsx`, etc. all still say "Recordly" in UI copy.
-- **Auth**: `src/lib/auth/recordlyAuth.ts`, `src/components/auth/useRecordlyAuth.ts`, `src/components/auth/RecordlySignInDialog.tsx` — filenames and exported symbol names still say Recordly; the auth *behavior* (OAuth callback scheme, Supabase config) must be understood before renaming, since the protocol scheme was just changed to `screenly://` in electron-builder but `electron/authCallback.ts` and the OAuth redirect handling need to be checked for a hardcoded `recordly://` scheme match — **this was not verified this session and is a likely functional break if left inconsistent.**
-- **Cloud share sub-app**: `services/recordly-share/` is an entire separate Cloudflare Worker + web service with "recordly" in its directory name, component names, and probably its own deployed domain/API. Renaming this touches a deployed service, not just local code — needs explicit user sign-off before any rename (this may have a live URL other systems depend on).
-- **Design system application**: none of the actual UI has been re-themed with the SCREENLY gradient/tokens yet. `screenly-design-tokens.css` exists in the brand kit folder but is not yet imported into `src/index.css` or `src/App.css`. This is realistically Phase 5 work per the PRD's own phase breakdown, not Phase 1.
-- **Full `npm run build` / electron-builder dmg or exe has not been produced.** The user's literal primary target (an installable dmg/exe) does not exist yet — package.json/electron-builder identity is ready for it, but nobody has run `npm run build:mac` / `build:win` end to end since the rename, and native helper builds are untested this session.
+## NEW as of tonight's launch test: known issue to track, not fix yet
+**Operator reports: "features are working but very laggy."** This was said after actually using the built app (record → edit, presumably). Operator's explicit instruction: **finish building out the remaining phases first, come back and fix performance later.** Do not get pulled into performance investigation/optimization until told to. When it's time: PRD §20 (Performance Budget) is the relevant section — profile before guessing, check for the known `EditorWindow` bundle being 1.6MB unminified-equivalent (vite warned about chunks >1000kB at every build — `EditorWindow-*.js` is consistently the largest at ~1.62MB), and check whether AI/background work is interfering with the main thread per PRD §1.3's "capture path is sacred" rule.
 
-## Immediate next actions (recommended order)
-1. Verify `electron/authCallback.ts` OAuth scheme matches the new `screenly://` protocol before anything else — this is a functional risk, not cosmetic.
-2. Decide with the user: rename `services/recordly-share/` now (if it's not yet deployed / has no external dependents) or leave it for a dedicated pass.
-3. Sweep remaining user-facing UI strings (the bucket above) file by file, re-running `npm run test` + `npm run typecheck` after each logical group, not as one giant sed pass.
-4. Wire `screenly-design-tokens.css` into the app (still Phase 1 "new SCREENLY theme/token system" per PRD step 16, distinct from the full Phase 5 visual overhaul).
-5. Run a real `npm run build:mac` (and `build:win` if on/targeting Windows) to produce the first actual dmg/exe and confirm the icon set + app identity render correctly.
-6. Only then: Phase 1 regression gate (full suite + manual smoke of record → edit → export) and mark Phase 1 complete in this file.
+## Next session: recommended order
+1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
+2. Do NOT re-run the identity/branding sweep — it's done. Do NOT start performance work — operator said later.
+3. Per operator's "build everything then fix" instruction: move into **Phase 2 (Recording Reliability + Capture Workflow)** — Recording Guardian, checkpoint/session manifest, Retake Mode, Clips, Replay Buffer. Re-read PRD §25 Phase 2 section in full before starting.
+4. Keep using the build → asar-dump → fix cycle for any future "is this really gone" verification.
+5. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).
