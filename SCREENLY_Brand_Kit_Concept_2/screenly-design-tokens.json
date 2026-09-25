@@ -1,0 +1,51 @@
+{
+  "color": {
+    "electric_blue": "#3882F6",
+    "violet": "#8B5CF6",
+    "magenta": "#EC4899",
+    "coral": "#FF686B",
+    "amber": "#F59E0B",
+    "navy": "#0B1020",
+    "slate": "#334155",
+    "gray": "#64748B",
+    "silver": "#CBD5E1",
+    "light": "#F1F5F9",
+    "white": "#FFFFFF"
+  },
+  "gradient": {
+    "primary": "linear-gradient(135deg, #3882F6 0%, #8B5CF6 38%, #EC4899 68%, #FF686B 86%, #F59E0B 100%)"
+  },
+  "radius": {
+    "xs": 8,
+    "sm": 12,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "pill": 999
+  },
+  "spacing_px": [
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    80,
+    96
+  ],
+  "typography": {
+    "display": "SF Pro Display / Inter, 700",
+    "body": "SF Pro Text / Inter, 400\u2013600",
+    "caption": "SF Pro Text / Inter, 500"
+  },
+  "motion": {
+    "fast_ms": 160,
+    "standard_ms": 240,
+    "emphasis_ms": 360,
+    "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+  }
+}

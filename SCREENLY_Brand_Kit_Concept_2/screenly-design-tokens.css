@@ -1,0 +1,9 @@
+:root {
+  --screenly-blue:#3882F6; --screenly-violet:#8B5CF6; --screenly-magenta:#EC4899;
+  --screenly-coral:#FF686B; --screenly-amber:#F59E0B; --screenly-navy:#0B1020;
+  --screenly-slate:#334155; --screenly-gray:#64748B; --screenly-silver:#CBD5E1;
+  --screenly-light:#F1F5F9; --screenly-white:#FFFFFF;
+  --screenly-gradient:linear-gradient(135deg,#3882F6 0%,#8B5CF6 38%,#EC4899 68%,#FF686B 86%,#F59E0B 100%);
+  --radius-xs:8px; --radius-sm:12px; --radius-md:16px; --radius-lg:24px; --radius-xl:32px;
+  --ease-standard:cubic-bezier(.2,.8,.2,1);
+}
