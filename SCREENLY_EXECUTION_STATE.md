@@ -9,7 +9,7 @@ Last updated: 2026-09-25 (Phase 1, in progress)
 - Working dir: `/Users/iamadarsha/Screenly` (was an ungitted Recordly working folder; `git init` run, baseline committed)
 - Node v24.14.0 / npm 11.9.0
 - Primary target confirmed by operator: a signed-or-unsigned dmg (mac) / exe or nsis installer (win), installable via a GitHub release, built from this Electron + Vite + React 19 codebase.
-- GitHub target repo: `iamadarsha/screenly` (does not exist yet — not created this session; operator must create/push it before release automation is meaningful). `gh` CLI is authenticated as `iamadarsha`.
+- GitHub target repo: `iamadarsha/screenly` — created (private) and this history pushed to `main` this session. `gh` CLI is authenticated as `iamadarsha`.
 - Bundle/app id chosen: `app.screenly.desktop`.
 
 ## Baseline (recorded before any code changes, commit `c285401`)
