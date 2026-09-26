@@ -392,6 +392,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	const screenStream = useRef<MediaStream | null>(null);
 	const microphoneStream = useRef<MediaStream | null>(null);
 	const webcamStream = useRef<MediaStream | null>(null);
+	const recordingActiveRef = useRef(false);
 	const mixingContext = useRef<AudioContext | null>(null);
 	const chunks = useRef<Blob[]>([]);
 	const webcamChunks = useRef<Blob[]>([]);
@@ -1032,6 +1033,15 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 						},
 				audio: false,
 			});
+			for (const track of webcamStream.current.getVideoTracks()) {
+				track.addEventListener("ended", () => {
+					if (recordingActiveRef.current) {
+						toast.warning(
+							"Webcam disconnected. Recording continues without the camera.",
+						);
+					}
+				});
+			}
 
 			const mimeType = selectWebcamMimeType();
 			webcamChunks.current = [];
@@ -1610,6 +1620,45 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	}, [recording]);
 
 	useEffect(() => {
+		recordingActiveRef.current = recording;
+	}, [recording]);
+
+	useEffect(() => {
+		if (
+			!recording ||
+			paused ||
+			typeof window.electronAPI?.getMediaHealthStatus !== "function"
+		) {
+			return;
+		}
+
+		const MEDIA_HEALTH_CHECK_INTERVAL_MS = 5_000;
+		const toastId = "recording-stalled";
+		let cancelled = false;
+
+		const checkMediaHealth = async () => {
+			const result = await window.electronAPI.getMediaHealthStatus();
+			if (cancelled) return;
+			if (result.status === "stalled") {
+				toast.warning(
+					"The recording doesn't appear to be receiving new frames. If this continues, stop and restart the recording to avoid losing footage.",
+					{ id: toastId, duration: Infinity },
+				);
+			} else {
+				toast.dismiss(toastId);
+			}
+		};
+
+		void checkMediaHealth();
+		const interval = setInterval(() => void checkMediaHealth(), MEDIA_HEALTH_CHECK_INTERVAL_MS);
+		return () => {
+			cancelled = true;
+			clearInterval(interval);
+			toast.dismiss(toastId);
+		};
+	}, [recording, paused]);
+
+	useEffect(() => {
 		let cleanup: (() => void) | undefined;
 
 		if (window.electronAPI?.onStopRecordingFromTray) {
@@ -2084,6 +2133,15 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 								browserMicrophoneProfile.current,
 							),
 						);
+						for (const track of microphoneStream.current.getAudioTracks()) {
+							track.addEventListener("ended", () => {
+								if (recordingActiveRef.current) {
+									toast.warning(
+										"Microphone disconnected. Recording continues without it.",
+									);
+								}
+							});
+						}
 					} catch (audioError) {
 						console.warn("Failed to get microphone access:", audioError);
 						alert(

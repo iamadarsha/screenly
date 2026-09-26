@@ -79,6 +79,11 @@ import {
 	updateRecordingCheckpointHeartbeat,
 	writeRecordingCheckpointStart,
 } from "../recording/guardian";
+import {
+	appendMediaHealthSample,
+	classifyMediaHealth,
+	type MediaHealthSample,
+} from "../recording/mediaHealth";
 import { resolveRecordedVideoStoragePath } from "../recording/storagePath";
 import {
 	attachWindowsCaptureLifecycle,
@@ -405,6 +410,7 @@ async function resolveExistingPath(...candidates: Array<string | null | undefine
 
 let checkpointHeartbeatInterval: NodeJS.Timeout | null = null;
 let checkpointVideoPath: string | null = null;
+let mediaHealthSamples: MediaHealthSample[] = [];
 
 function resolveActiveRecordingPathForCheckpoint(): {
 	videoPath: string;
@@ -465,10 +471,24 @@ function beginRecordingCheckpoint(): void {
 		capturesWebcam: false,
 	});
 
+	mediaHealthSamples = [];
+
 	if (checkpointHeartbeatInterval) clearInterval(checkpointHeartbeatInterval);
 	checkpointHeartbeatInterval = setInterval(() => {
 		if (checkpointVideoPath) {
 			void updateRecordingCheckpointHeartbeat(checkpointVideoPath);
+			void fs
+				.stat(checkpointVideoPath)
+				.then((stat) => {
+					mediaHealthSamples = appendMediaHealthSample(mediaHealthSamples, {
+						atMs: Date.now(),
+						sizeBytes: stat.size,
+					});
+				})
+				.catch(() => {
+					// The output file may not exist yet in the first moments of a
+					// recording; that's not evidence of a stall on its own.
+				});
 		}
 	}, RECORDING_CHECKPOINT_HEARTBEAT_MS);
 }
@@ -478,6 +498,7 @@ function endRecordingCheckpoint(): void {
 		clearInterval(checkpointHeartbeatInterval);
 		checkpointHeartbeatInterval = null;
 	}
+	mediaHealthSamples = [];
 	const videoPath = checkpointVideoPath ?? resolveActiveRecordingPathForCheckpoint()?.videoPath;
 	checkpointVideoPath = null;
 	if (videoPath) {
@@ -1407,6 +1428,7 @@ export function registerRecordingHandlers(
 			try {
 				windowsCaptureProcess.stdin.write("pause\n");
 				setWindowsCapturePaused(true);
+				mediaHealthSamples = [];
 				return { success: true };
 			} catch (error) {
 				return {
@@ -1440,6 +1462,7 @@ export function registerRecordingHandlers(
 			nativeCaptureProcess.stdin.write("pause\n");
 			await commandApplied;
 			setNativeCapturePaused(true);
+			mediaHealthSamples = [];
 			return { success: true };
 		} catch (error) {
 			return {
@@ -1463,6 +1486,7 @@ export function registerRecordingHandlers(
 			try {
 				windowsCaptureProcess.stdin.write("resume\n");
 				setWindowsCapturePaused(false);
+				mediaHealthSamples = [];
 				return { success: true };
 			} catch (error) {
 				return {
@@ -1496,6 +1520,7 @@ export function registerRecordingHandlers(
 			nativeCaptureProcess.stdin.write("resume\n");
 			await commandApplied;
 			setNativeCapturePaused(false);
+			mediaHealthSamples = [];
 			return { success: true };
 		} catch (error) {
 			return {
@@ -1998,6 +2023,10 @@ export function registerRecordingHandlers(
 	ipcMain.handle("get-disk-space-status", async () => {
 		const dir = await getRecordingsDir();
 		return getDiskSpaceStatus(dir);
+	});
+
+	ipcMain.handle("get-media-health-status", () => {
+		return { status: classifyMediaHealth(mediaHealthSamples, Date.now()) };
 	});
 
 	ipcMain.handle("get-recoverable-recordings", async () => {

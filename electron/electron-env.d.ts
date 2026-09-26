@@ -594,6 +594,7 @@ interface Window {
 			status: "ok" | "low" | "critical" | "unknown";
 			freeBytes: number | null;
 		}>;
+		getMediaHealthStatus: () => Promise<{ status: "ok" | "stalled" | "unknown" }>;
 		getRecoverableRecordings: () => Promise<
 			Array<{
 				checkpointPath: string;

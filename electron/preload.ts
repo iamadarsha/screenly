@@ -622,6 +622,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	getDiskSpaceStatus: () => {
 		return ipcRenderer.invoke("get-disk-space-status");
 	},
+	getMediaHealthStatus: () => {
+		return ipcRenderer.invoke("get-media-health-status");
+	},
 	getRecoverableRecordings: () => {
 		return ipcRenderer.invoke("get-recoverable-recordings");
 	},
