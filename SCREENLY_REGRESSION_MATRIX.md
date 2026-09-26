@@ -1,6 +1,17 @@
 # SCREENLY Regression Matrix
 
-## Status as of 2026-09-26 (end of session)
+## Status as of 2026-09-26, Phase 2 session (Recording Guardian slice)
+
+| Check | Status | Notes |
+|---|---|---|
+| `npm run typecheck` | ✅ PASS | clean throughout |
+| `npm run lint` | ✅ PASS | same 1 pre-existing unrelated warning |
+| `npm run test` | ✅ PASS | 163 files / 1415 tests (+19 new: `diskSpace.test.ts`, `guardian.test.ts`) |
+| Guardian backend vs. real data | ✅ VERIFIED | `scanForRecoverableRecordings` run against the actual dev userData directory (not a mock), correctly found a planted fake checkpoint |
+| Guardian backend vs. a real recording cycle | ✅ VERIFIED | an actual (accidental, warm-start-triggered) recording start/stop happened live during `npm run dev`; checkpoint was written then correctly removed on clean stop, no leftover file |
+| Recovery dialog visual rendering | ⬜ NOT VERIFIED | typechecks and reuses an established Dialog pattern from `DashboardDialogs.tsx`, but was not actually screenshotted in a running GUI this session (see execution-state notes on why) |
+
+## Status as of 2026-09-26 (end of previous session)
 
 | Check | Status | Notes |
 |---|---|---|

@@ -1,12 +1,12 @@
 # SCREENLY Execution State
 
-Last updated: 2026-09-26 (Phase 1, identity/rebrand essentially done; resuming next session)
+Last updated: 2026-09-26 (Phase 1 identity/rebrand done; Phase 2 Recording Guardian slice done)
 
 ## Current phase
-**Phase 1 — Foundation, Audit, Identity, Assets.** The identity/rebrand slice is done and verified against a real running app. Phase 1's remaining items (below) are mostly deferred by deliberate choice, not oversight. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish Phase 1 further unless something is actually broken.
+**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2, only Feature 1 (Recording Guardian)'s disk-monitoring and crash-recovery-checkpoint pieces are done — Retake Mode, Clips, Replay Buffer, and Guardian's media-health monitor are NOT started. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
 
 ## Environment
-- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 13 commits.
+- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 15 commits.
 - Node v24.14.0 / npm 11.9.0. `gh` CLI authenticated as `iamadarsha`.
 - Bundle id: `app.screenly.desktop`. Protocol scheme: `screenly://`.
 - Primary target: signed dmg (mac) / exe (win) installable via GitHub release.
@@ -31,9 +31,23 @@ Last updated: 2026-09-26 (Phase 1, identity/rebrand essentially done; resuming n
 ## NEW as of tonight's launch test: known issue to track, not fix yet
 **Operator reports: "features are working but very laggy."** This was said after actually using the built app (record → edit, presumably). Operator's explicit instruction: **finish building out the remaining phases first, come back and fix performance later.** Do not get pulled into performance investigation/optimization until told to. When it's time: PRD §20 (Performance Budget) is the relevant section — profile before guessing, check for the known `EditorWindow` bundle being 1.6MB unminified-equivalent (vite warned about chunks >1000kB at every build — `EditorWindow-*.js` is consistently the largest at ~1.62MB), and check whether AI/background work is interfering with the main thread per PRD §1.3's "capture path is sacred" rule.
 
+## Phase 2 progress (this session)
+
+**Done and verified** — Recording Guardian, partial (PRD Feature 1):
+- `electron/ipc/recording/diskSpace.ts`: free-disk-space check (`fs.statfsSync`), classified ok/low/critical against 2GB/500MB thresholds. 9 unit tests.
+- `electron/ipc/recording/guardian.ts`: a new incremental recording checkpoint (`.screenly-checkpoint.json`) written on record-start and heartbeated every 5s, distinct from the pre-existing `.screenly-session.json` (which is only webcam↔screen file linking, NOT a checkpoint — don't confuse the two). On next launch, any checkpoint still on disk means an unclean shutdown; `scanForRecoverableRecordings` finds and validates these. Clean stop finalizes (deletes) the checkpoint. 10 unit tests covering corrupt/stale/empty-video edge cases.
+- Wired into the **existing** `set-recording-state` IPC handler in `electron/ipc/register/recording.ts` (confirmed via codebase survey to be the one place both mac and Windows capture paths already funnel start/stop side effects through — did not invent a new integration point).
+- New IPC: `get-disk-space-status`, `get-recoverable-recordings`, `discard-recoverable-recording`.
+- Renderer: critical-disk preflight block before recording starts, low/critical disk toast every 30s while recording, `RecoverableRecordingsDialog.tsx` shown on dashboard mount (Keep-all / Discard actions — deliberately reuses the existing raw-recordings library view rather than building a new "open recovered video" pipeline, since one doesn't exist for raw recordings today).
+- Verified: full suite green (163 files / 1415 tests, +19 new), typecheck/lint clean, backend logic double-checked against the real dev userData directory (not just temp dirs), and against a real accidental recording start/stop cycle during `npm run dev` testing — the checkpoint was correctly created then cleanly removed with no intervention.
+- **Not verified**: the recovery dialog's actual visual rendering. An attempt to screenshot it live (planting a fake checkpoint, running `npm run dev`) got the backend confirmed but couldn't reliably drive the Electron HUD's GUI to open the dashboard without a proper computer-use/accessibility tool — one blind coordinate-click attempt landed on an unrelated Chrome tab on the operator's real desktop instead of the app window, so further coordinate-clicking was abandoned as unsafe/unreliable. **If revisiting this, use a proper GUI automation tool (computer-use MCP with access granted) rather than raw AppleScript/CoreGraphics coordinate clicks — window focus/z-order assumptions were wrong twice in a row this session.**
+
+**Not started**: Guardian's media-health monitor (dropped-frame/stalled-stream detection — genuinely absent from the codebase per this session's survey, would need new live-polling logic), explicit failsafe-chain user messaging for webcam/system-audio degradation (webcam-fails-silently behavior already exists in `useScreenRecorder.ts`, just has no user-facing notice), Retake Mode + Clips (needs a new data-model layer — today's `ClipRegion` type is single-source-only, confirmed via survey), Replay Buffer (rolling disk-backed buffer — nothing like this exists at all), global keyboard shortcuts (`electron.globalShortcut` is not used anywhere in this codebase — needed for Replay Buffer's "Save Replay" hotkey).
+
 ## Next session: recommended order
 1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
 2. Do NOT re-run the identity/branding sweep — it's done. Do NOT start performance work — operator said later.
-3. Per operator's "build everything then fix" instruction: move into **Phase 2 (Recording Reliability + Capture Workflow)** — Recording Guardian, checkpoint/session manifest, Retake Mode, Clips, Replay Buffer. Re-read PRD §25 Phase 2 section in full before starting.
-4. Keep using the build → asar-dump → fix cycle for any future "is this really gone" verification.
-5. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).
+3. Continue Phase 2: pick up media-health monitoring, or move to Retake Mode/Clips (needs new data model design first), or Replay Buffer (needs `globalShortcut` infrastructure built from scratch). All three are still fully open.
+4. Keep using the build → asar-dump → fix cycle for any future "is this really gone" branding verification.
+5. For any future live-GUI verification, request proper computer-use access rather than improvising coordinate clicks.
+6. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).
