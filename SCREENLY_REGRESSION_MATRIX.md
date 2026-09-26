@@ -1,5 +1,17 @@
 # SCREENLY Regression Matrix
 
+## Status as of 2026-09-27, Phase 2 session (inline retake-recording — Phase 2 now feature-complete)
+
+| Check | Status | Notes |
+|---|---|---|
+| `npm run typecheck` | ✅ PASS | clean |
+| `npm run lint` | ✅ PASS | same 1 pre-existing unrelated warning |
+| `npm run test` | ✅ PASS | 167 files / 1456 tests (no new tests this feature - pure IPC/window-coordination wiring, no new non-trivial pure logic; `retake.test.ts` already covers the shared apply-logic) |
+| Cross-window retake handoff (window-by-id lookup, no-reload show/focus, event delivery, shared pendingRetake state) | ✅ VERIFIED via CDP | Real signed app, `--remote-debugging-port` + `Runtime.evaluate` against the actual editor and HUD window contexts (not mocks, not coordinate clicks). Confirmed: `pendingRetake` is genuine cross-window main-process state; `finishRetakeRecording` correctly returns to the *original* window without reloading it (a JS marker set beforehand survived); the `retake-recording-ready` event delivered the exact `{clipId, videoPath}` payload to that window's listener. |
+| `retakeClip` actually applying to a real clip in a real project | ⬜ NOT RE-VERIFIED THIS SESSION | Deliberately out of scope for the CDP test above (no real clip existed under the test id) - already covered by 10 passing unit tests in `retake.test.ts`, unchanged by this session. Covered as part of Phase 2's still-pending manual regression smoke (see execution-state "Next session" item 3). |
+
+**Phase 2 status: every feature built. Full manual regression smoke (per PRD §25 Phase 2) has NOT been run as a whole yet** - each feature has been verified individually (some very thoroughly, e.g. Instant Replay and this retake work), but the PRD's own gate wants a full pass covering the whole existing capture/edit/export pipeline together, which hasn't happened this session.
+
 ## Status as of 2026-09-26, Phase 2 session (Media Health + Instant Replay slices)
 
 | Check | Status | Notes |
