@@ -1,5 +1,16 @@
 # SCREENLY Regression Matrix
 
+## Status as of 2026-09-26, Phase 2 session (Media Health + Instant Replay slices)
+
+| Check | Status | Notes |
+|---|---|---|
+| `npm run typecheck` | ✅ PASS | clean |
+| `npm run lint` | ✅ PASS | same 1 pre-existing unrelated warning |
+| `npm run test` | ✅ PASS | 167 files / 1455 tests (+30 new across mediaHealth, replayBuffer, replayBufferSettingsStore) |
+| Media-health pure logic | ✅ VERIFIED | 10 unit tests |
+| Replay buffer pure logic + real concat | ✅ VERIFIED | 5 of the 14 replayBuffer tests use real ffmpeg-generated chunk files and a real concat run, not mocks — caught a real `-safe 1` vs `-safe 0` bug before it shipped |
+| Replay buffer's actual background `avfoundation` capture | ⬜ NOT VERIFIED | attempted directly from a bare shell; hung due to that shell process lacking macOS Screen Recording permission (avfoundation blocks silently when unauthorized, doesn't error) — an environment limitation of testing outside the signed app, not a known code defect, but genuinely unverified. **Do this first next session.** |
+
 ## Status as of 2026-09-26, Phase 2 session (Retake Mode slice)
 
 | Check | Status | Notes |

@@ -1,12 +1,12 @@
 # SCREENLY Execution State
 
-Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode + Media Health slices done)
+Last updated: 2026-09-26 (Phase 1 done; Phase 2 nearly done — Guardian, Retake Mode, Media Health, Instant Replay all built)
 
 ## Current phase
-**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2: Guardian (disk-monitoring, crash-recovery-checkpoint, stalled-stream + device-disconnect media-health), and Retake Mode's alternate-takes mechanic, are done. Still open: Replay Buffer and an inline retake-recording flow. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
+**Phase 2 — Recording Reliability + Capture Workflow, nearly complete.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2: Guardian (disk-monitoring, crash-recovery-checkpoint, stalled-stream + device-disconnect media-health), Retake Mode, and Instant Replay/Replay Buffer are all built. Only the inline retake-recording fast-follow remains open, plus one real-app verification gap noted below (Instant Replay's actual background capture, not yet confirmed running inside the signed app). **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
 
 ## Environment
-- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 18 commits.
+- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 19 commits.
 - Node v24.14.0 / npm 11.9.0. `gh` CLI authenticated as `iamadarsha`.
 - Bundle id: `app.screenly.desktop`. Protocol scheme: `screenly://`.
 - Primary target: signed dmg (mac) / exe (win) installable via GitHub release.
@@ -58,13 +58,20 @@ Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode
 - **Not done, confirmed infeasible in this pass**: system-audio-failure detection/messaging. Unlike mic (has a working Windows fallback keyed off a specific native-helper stdout marker) and webcam (plain JS MediaStream), system audio capture happens entirely inside the native ScreenCaptureKit/WGC helper processes with no JS-visible failure signal yet — would need new marker-parsing work per platform, out of scope here.
 - Verified: 165 files / 1435 tests (+10), typecheck/lint clean. Not verified live (same GUI-automation gap as Guardian/Retake).
 
-## Phase 2 still open
-Replay Buffer (rolling disk-backed buffer + `globalShortcut` — confirmed nothing like this exists at all in the codebase), and the inline retake-recording flow noted above.
+## Instant Replay / Replay Buffer (this session, done)
+- `electron/ipc/recording/replayBuffer.ts`: rolling background capture using ffmpeg's own `segment`/`segment_wrap` muxer (no custom chunk-rotation code needed), full-screen only. `electron/ipc/settings/replayBufferSettingsStore.ts`: enabled/duration persisted, off by default (opt-in). Global shortcut `Cmd/Ctrl+Shift+R` registered only while enabled (`electron/main.ts`). Saving reuses `importRecording.ts`'s stream-copy concat technique. Settings UI in Settings > Recording.
+- 20 new tests, including 5 using **real generated ffmpeg chunks and real concat** (not just mocks) — this caught and fixed a genuine bug before shipping: `-safe 1` silently rejects absolute paths in a concat list, needed `-safe 0`.
+- **Verification honesty**: the pure logic and the concat/save path are verified against real ffmpeg output. The actual continuous `avfoundation` background capture was NOT verified end-to-end — I tried running it directly from a bare shell on this Mac and it hung, which traces to that shell process lacking macOS Screen Recording permission (avfoundation blocks silently rather than erroring when unauthorized), not a code defect. The exact same capture-argument construction pattern is already used successfully by the pre-existing `start-ffmpeg-recording` fallback path elsewhere in this codebase (which this session did not touch), so the approach itself is proven — but this specific new code path has not been exercised inside the actual signed, permissioned app. **Next session: verify this first**, either via a real GUI test (with proper computer-use access) or by running the built app directly and toggling the setting.
+- Known, accepted limitation: a narrow race between the continuously-rotating chunks and a concurrent save could glitch at most one chunk's boundary. Documented in code; not fixed (would need cross-process file locking for a low-probability, low-impact edge case).
+
+## Phase 2 remaining
+Only the inline retake-recording flow (currently requires picking an already-recorded file rather than recording inline from the "Retake" button) is still open. Everything else in Phase 2's feature list (Recording Guardian, Retake Mode, media-health monitoring, Instant Replay) now has a first implementation.
 
 ## Next session: recommended order
 1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
 2. Do NOT re-run the identity/branding sweep — it's done. Do NOT start performance work — operator said later.
-3. Continue Phase 2: pick up media-health monitoring, Replay Buffer (needs `globalShortcut` infrastructure built from scratch), or the inline retake-recording fast-follow. All three are still fully open.
-4. Keep using the build → asar-dump → fix cycle for any future "is this really gone" branding verification.
-5. For any future live-GUI verification, request proper computer-use access rather than improvising coordinate clicks.
-6. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).
+3. **First priority**: verify Instant Replay's actual background capture inside the real signed app (toggle it on in Settings, wait, press Cmd/Ctrl+Shift+R, confirm a `replay-*.mp4` shows up in the library). This is the one built-but-unverified piece from this session.
+4. Then: Phase 2's only remaining open item is the inline retake-recording fast-follow (record a new take directly from the "Retake" button instead of requiring an existing file). After that, Phase 2 is feature-complete and PRD's own regression gate (full suite + manual record→edit→export smoke) should run before moving to Phase 3.
+5. Keep using the build → asar-dump → fix cycle for any future "is this really gone" branding verification.
+6. For any future live-GUI verification, request proper computer-use access rather than improvising coordinate clicks or bare-shell ffmpeg invocations (both were tried this session and both hit permission/focus issues outside the real app).
+7. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).
