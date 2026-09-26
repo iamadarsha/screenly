@@ -1659,6 +1659,17 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	}, [recording, paused]);
 
 	useEffect(() => {
+		if (typeof window.electronAPI?.onReplaySaved !== "function") return;
+		return window.electronAPI.onReplaySaved((result) => {
+			if (result.success) {
+				toast.success("Replay saved to your library");
+			} else {
+				toast.error(result.error || "Could not save the replay");
+			}
+		});
+	}, []);
+
+	useEffect(() => {
 		let cleanup: (() => void) | undefined;
 
 		if (window.electronAPI?.onStopRecordingFromTray) {

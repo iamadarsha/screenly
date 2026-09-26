@@ -27,6 +27,11 @@ import {
 	killWindowsCaptureProcess,
 	registerIpcHandlers,
 } from "./ipc/handlers";
+import {
+	initializeReplayBufferOnStartup,
+	unregisterReplayBufferShortcut,
+} from "./ipc/register/settings";
+import { stopReplayBufferCapture } from "./ipc/recording/replayBuffer";
 import { ensureMediaServer } from "./mediaServer";
 import { hardenWebContentsNavigation, shouldHardenWebContentsType } from "./navigationPolicy";
 import { shouldGrantDisplayCapture, shouldGrantMediaPermission } from "./permissionPolicy";
@@ -880,6 +885,8 @@ app.on("before-quit", () => {
 	showCursor();
 	cleanupNativeVideoExportSessions();
 	void cleanupAllExportStreams();
+	unregisterReplayBufferShortcut();
+	void stopReplayBufferCapture();
 });
 
 app.on("window-all-closed", () => {
@@ -1039,6 +1046,10 @@ app.whenReady().then(async () => {
 			}
 		},
 	);
+
+	void initializeReplayBufferOnStartup().catch((error) => {
+		console.warn("Failed to resume Instant Replay on startup:", error);
+	});
 
 	if (IS_SMOKE_EXPORT || process.env.RECORDLY_DEV_OPEN_RECORDING_INPUT) {
 		await logSmokeExportGpuDiagnostics();

@@ -1030,6 +1030,25 @@ interface Window {
 			webcamEnabled?: boolean;
 			webcamDeviceId?: string;
 		}) => Promise<{ success: boolean; error?: string }>;
+		/** Instant Replay (rolling background buffer + Save Replay) */
+		getReplayBufferSettings: () => Promise<{
+			success: boolean;
+			enabled: boolean;
+			durationSec: 30 | 60 | 120 | 300;
+		}>;
+		setReplayBufferSettings: (patch: {
+			enabled?: boolean;
+			durationSec?: number;
+		}) => Promise<{
+			success: boolean;
+			enabled?: boolean;
+			durationSec?: 30 | 60 | 120 | 300;
+			error?: string;
+		}>;
+		saveReplay: () => Promise<{ success: boolean; path?: string; error?: string }>;
+		onReplaySaved: (
+			callback: (result: { success: boolean; path?: string; error?: string }) => void,
+		) => () => void;
 		/** Countdown timer before recording */
 		getCountdownDelay: () => Promise<{ success: boolean; delay: number }>;
 		setCountdownDelay: (delay: number) => Promise<{ success: boolean; error?: string }>;

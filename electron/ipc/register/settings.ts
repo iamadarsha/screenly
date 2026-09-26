@@ -1,14 +1,26 @@
 import { createCountdownController } from "../../countdownController";
 import fs from "node:fs/promises";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { hasAppSetting, readAppSettingsStore, writeAppSettingsStore } from "../../appSettingsStore";
 import { hideCursor } from "../../cursorHider";
 import { createCountdownWindow } from "../../windows";
-import { COUNTDOWN_SETTINGS_FILE, RECORDINGS_SETTINGS_FILE, SHORTCUTS_FILE } from "../constants";
+import {
+	COUNTDOWN_SETTINGS_FILE,
+	RECORDINGS_SETTINGS_FILE,
+	REPLAY_BUFFER_SAVE_SHORTCUT,
+	REPLAY_BUFFER_SETTINGS_FILE,
+	SHORTCUTS_FILE,
+} from "../constants";
+import {
+	startReplayBufferCapture,
+	stopReplayBufferCapture,
+	saveReplay,
+} from "../recording/replayBuffer";
 import {
 	createRecordingPreferencesStore,
 	type RecordingPreferencesPatch,
 } from "../settings/recordingPreferencesStore";
+import { createReplayBufferSettingsStore } from "../settings/replayBufferSettingsStore";
 import {
 	countdownInProgress,
 	countdownRemaining,
@@ -17,9 +29,10 @@ import {
 } from "../state";
 import { parseJsonWithByteOrderMark } from "../utils";
 
-const BROWSER_MICROPHONE_PROFILE_ENV = "RECORDLY_BROWSER_MIC_PROFILE";
+const BROWSER_MICROPHONE_PROFILE_ENV = "SCREENLY_BROWSER_MIC_PROFILE";
 const DEFAULT_BROWSER_MICROPHONE_PROFILE = "processed";
 const recordingPreferencesStore = createRecordingPreferencesStore(RECORDINGS_SETTINGS_FILE);
+const replayBufferSettingsStore = createReplayBufferSettingsStore(REPLAY_BUFFER_SETTINGS_FILE);
 const BROWSER_MICROPHONE_PROFILES = new Set([
 	"processed",
 	"no-agc",
@@ -173,6 +186,36 @@ export function registerSettingsHandlers() {
 		}
 	});
 
+	ipcMain.handle("get-replay-buffer-settings", async () => {
+		const settings = await replayBufferSettingsStore.read();
+		return { success: true, ...settings };
+	});
+
+	ipcMain.handle(
+		"set-replay-buffer-settings",
+		async (_, patch: { enabled?: boolean; durationSec?: number }) => {
+			try {
+				const settings = await replayBufferSettingsStore.update(patch);
+				if (settings.enabled) {
+					await startReplayBufferCapture(settings.durationSec);
+					registerReplayBufferShortcut();
+				} else {
+					await stopReplayBufferCapture();
+					unregisterReplayBufferShortcut();
+				}
+				return { success: true, ...settings };
+			} catch (error) {
+				console.error("Failed to update Instant Replay settings:", error);
+				return { success: false, error: String(error) };
+			}
+		},
+	);
+
+	ipcMain.handle("save-replay", async () => {
+		const settings = await replayBufferSettingsStore.read();
+		return saveReplay(settings.durationSec);
+	});
+
 	ipcMain.handle("get-countdown-delay", async () => {
 		try {
 			const content = await fs.readFile(COUNTDOWN_SETTINGS_FILE, "utf-8");
@@ -210,4 +253,37 @@ export function registerSettingsHandlers() {
 			seconds: countdownInProgress ? countdownRemaining : null,
 		};
 	});
+}
+
+/** For the global "Save Replay" shortcut, which isn't triggered via ipcMain. */
+async function triggerSaveReplay() {
+	const settings = await replayBufferSettingsStore.read();
+	const result = await saveReplay(settings.durationSec);
+	for (const window of BrowserWindow.getAllWindows()) {
+		if (!window.isDestroyed()) {
+			window.webContents.send("replay-saved", result);
+		}
+	}
+	return result;
+}
+
+/** Only held while Instant Replay is enabled - never competes with other apps' shortcuts otherwise. */
+export function registerReplayBufferShortcut(): void {
+	if (globalShortcut.isRegistered(REPLAY_BUFFER_SAVE_SHORTCUT)) return;
+	globalShortcut.register(REPLAY_BUFFER_SAVE_SHORTCUT, () => {
+		void triggerSaveReplay();
+	});
+}
+
+export function unregisterReplayBufferShortcut(): void {
+	globalShortcut.unregister(REPLAY_BUFFER_SAVE_SHORTCUT);
+}
+
+/** Resume Instant Replay's background capture (and its shortcut) on launch if left enabled. */
+export async function initializeReplayBufferOnStartup(): Promise<void> {
+	const settings = await replayBufferSettingsStore.read();
+	if (settings.enabled) {
+		await startReplayBufferCapture(settings.durationSec);
+		registerReplayBufferShortcut();
+	}
 }

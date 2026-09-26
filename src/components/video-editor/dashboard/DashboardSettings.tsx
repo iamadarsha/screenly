@@ -2,9 +2,23 @@ import { SettingsSections, SettingsCategory } from "../SettingsSections";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { SettingsRow } from "../SettingsRow";
 import { Switch } from "@/components/ui/switch";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { supportsHudCaptureProtection } from "@/lib/hudCaptureProtection";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
+
+const REPLAY_BUFFER_DURATION_OPTIONS = [
+	{ value: 30, label: "Last 30 seconds" },
+	{ value: 60, label: "Last 1 minute" },
+	{ value: 120, label: "Last 2 minutes" },
+	{ value: 300, label: "Last 5 minutes" },
+];
 export const DashboardSettingsContext = createContext<ReactNode>(null);
 export function DashboardSettings({ onImportFile }: { onImportFile: () => Promise<void> }) {
 	const settingsContent = useContext(DashboardSettingsContext);
@@ -12,6 +26,8 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 	const [recordings, setRecordings] = useState("");
 	const [hideHud, setHideHud] = useState(true);
 	const [captureSupported, setCaptureSupported] = useState(false);
+	const [replayBufferEnabled, setReplayBufferEnabled] = useState(false);
+	const [replayBufferDurationSec, setReplayBufferDurationSec] = useState(60);
 	const [busy, setBusy] = useState(false);
 	const run = async (action: () => Promise<void>) => {
 		setBusy(true);
@@ -29,12 +45,17 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 			window.electronAPI.getRecordingsDirectory(),
 			window.electronAPI.getHudOverlayCaptureProtection(),
 			window.electronAPI.getPlatform(),
+			window.electronAPI.getReplayBufferSettings(),
 		])
-			.then(([directory, protection, platform]) => {
+			.then(([directory, protection, platform, replayBuffer]) => {
 				if (!active) return;
 				if (directory.success) setRecordings(directory.path);
 				if (protection.success) setHideHud(protection.enabled);
 				setCaptureSupported(supportsHudCaptureProtection(platform));
+				if (replayBuffer.success) {
+					setReplayBufferEnabled(replayBuffer.enabled);
+					setReplayBufferDurationSec(replayBuffer.durationSec);
+				}
 			})
 			.catch((error) => toast.error(String(error)));
 		return () => {
@@ -108,6 +129,62 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 									})
 								}
 							/>
+						</SettingsRow>
+					)}
+					<SettingsRow
+						title="Instant Replay"
+						description="Continuously captures your screen in the background so you can save the last few minutes with Cmd/Ctrl+Shift+R, even if you never pressed record."
+					>
+						<Switch
+							aria-label="Instant Replay"
+							checked={replayBufferEnabled}
+							disabled={busy}
+							onCheckedChange={(enabled) =>
+								void run(async () => {
+									const result = await window.electronAPI.setReplayBufferSettings({
+										enabled,
+									});
+									if (!result.success)
+										throw Error(result.error || "Could not update Instant Replay");
+									setReplayBufferEnabled(result.enabled ?? enabled);
+								})
+							}
+						/>
+					</SettingsRow>
+					{replayBufferEnabled && (
+						<SettingsRow title="Instant Replay buffer length">
+							<Select
+								value={String(replayBufferDurationSec)}
+								onValueChange={(value) =>
+									void run(async () => {
+										const durationSec = Number(value);
+										const result = await window.electronAPI.setReplayBufferSettings(
+											{ durationSec },
+										);
+										if (!result.success)
+											throw Error(
+												result.error || "Could not update Instant Replay",
+											);
+										setReplayBufferDurationSec(result.durationSec ?? durationSec);
+									})
+								}
+								disabled={busy}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent className="z-[100]">
+									{REPLAY_BUFFER_DURATION_OPTIONS.map((option) => (
+										<SelectItem
+											key={option.value}
+											value={String(option.value)}
+											className="text-foreground focus:bg-foreground/10 focus:text-foreground"
+										>
+											{option.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</SettingsRow>
 					)}
 				</SettingsCategory>

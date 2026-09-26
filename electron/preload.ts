@@ -1099,6 +1099,20 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		webcamEnabled?: boolean;
 		webcamDeviceId?: string;
 	}) => ipcRenderer.invoke("set-recording-preferences", prefs),
+	getReplayBufferSettings: () => ipcRenderer.invoke("get-replay-buffer-settings"),
+	setReplayBufferSettings: (patch: { enabled?: boolean; durationSec?: number }) =>
+		ipcRenderer.invoke("set-replay-buffer-settings", patch),
+	saveReplay: () => ipcRenderer.invoke("save-replay"),
+	onReplaySaved: (
+		callback: (result: { success: boolean; path?: string; error?: string }) => void,
+	) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			result: { success: boolean; path?: string; error?: string },
+		) => callback(result);
+		ipcRenderer.on("replay-saved", listener);
+		return () => ipcRenderer.removeListener("replay-saved", listener);
+	},
 	getCountdownDelay: () => ipcRenderer.invoke("get-countdown-delay"),
 	setCountdownDelay: (delay: number) => ipcRenderer.invoke("set-countdown-delay", delay),
 	finishRecordingStartup: () => ipcRenderer.invoke("finish-recording-startup"),
