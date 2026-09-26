@@ -1,12 +1,12 @@
 # SCREENLY Execution State
 
-Last updated: 2026-09-26 (Phase 1 identity/rebrand done; Phase 2 Recording Guardian slice done)
+Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode slices done)
 
 ## Current phase
-**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2, only Feature 1 (Recording Guardian)'s disk-monitoring and crash-recovery-checkpoint pieces are done — Retake Mode, Clips, Replay Buffer, and Guardian's media-health monitor are NOT started. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
+**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2: Guardian's disk-monitoring + crash-recovery-checkpoint, and Retake Mode's alternate-takes mechanic, are both done. Still open: Guardian's media-health monitor, Replay Buffer, and an inline retake-recording flow. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
 
 ## Environment
-- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 15 commits.
+- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 16 commits.
 - Node v24.14.0 / npm 11.9.0. `gh` CLI authenticated as `iamadarsha`.
 - Bundle id: `app.screenly.desktop`. Protocol scheme: `screenly://`.
 - Primary target: signed dmg (mac) / exe (win) installable via GitHub release.
@@ -42,12 +42,23 @@ Last updated: 2026-09-26 (Phase 1 identity/rebrand done; Phase 2 Recording Guard
 - Verified: full suite green (163 files / 1415 tests, +19 new), typecheck/lint clean, backend logic double-checked against the real dev userData directory (not just temp dirs), and against a real accidental recording start/stop cycle during `npm run dev` testing — the checkpoint was correctly created then cleanly removed with no intervention.
 - **Not verified**: the recovery dialog's actual visual rendering. An attempt to screenshot it live (planting a fake checkpoint, running `npm run dev`) got the backend confirmed but couldn't reliably drive the Electron HUD's GUI to open the dashboard without a proper computer-use/accessibility tool — one blind coordinate-click attempt landed on an unrelated Chrome tab on the operator's real desktop instead of the app window, so further coordinate-clicking was abandoned as unsafe/unreliable. **If revisiting this, use a proper GUI automation tool (computer-use MCP with access granted) rather than raw AppleScript/CoreGraphics coordinate clicks — window focus/z-order assumptions were wrong twice in a row this session.**
 
-**Not started**: Guardian's media-health monitor (dropped-frame/stalled-stream detection — genuinely absent from the codebase per this session's survey, would need new live-polling logic), explicit failsafe-chain user messaging for webcam/system-audio degradation (webcam-fails-silently behavior already exists in `useScreenRecorder.ts`, just has no user-facing notice), Retake Mode + Clips (needs a new data-model layer — today's `ClipRegion` type is single-source-only, confirmed via survey), Replay Buffer (rolling disk-backed buffer — nothing like this exists at all), global keyboard shortcuts (`electron.globalShortcut` is not used anywhere in this codebase — needed for Replay Buffer's "Save Replay" hotkey).
+**Done and verified** — Retake Mode (PRD Feature 2, "alternate takes" half; Clips/reorder/trim/append already existed before this session):
+- `src/components/video-editor/retake.ts`: pure `applyRetakeToClip`/`swapToPreviousTake`, 10 unit tests. `ClipRegion.previousTakes` (new optional field in `types.ts`) is a stack — retaking never discards footage, it pushes the replaced range there.
+- **Key architectural decision**: does NOT touch `VideoPlayback.tsx` or the native export pipeline (`native-video.ts`/`modernVideoExporter.ts`) — a codebase survey this session confirmed both hard-assume exactly one source video file for the whole project (true live multi-source-per-clip would mean building a video-element pool for playback and threading per-segment paths through dozens of ffmpeg call sites in export — real future work, but multi-session-scale and risky to the app's most stability-critical code). Instead, retake reuses `importRecording` (`electron/ipc/recording/importRecording.ts`) — the same ffmpeg concat/normalize pipeline that already backs "append clip" — just to REPLACE a clip's source range instead of inserting a new one. Zero changes needed to playback/export because the result is still just one ordinary video file.
+- `src/components/video-editor/library/useClipRetake.ts` orchestrates it, mirroring `useRecordingLibrary.ts`'s `addToTimeline` pattern exactly (same finalize/commit two-step).
+- UI: "Retake this clip" / "Switch take" buttons in the existing clip inspector (`SettingsPanel.tsx`), and `RecordingLibraryPanel.tsx` gained a `retakeMode` prop so the same recording picker serves both "add" and "use as new take" without duplicating it.
+- Undo needed zero new code (existing history auto-snapshots `clipRegions`).
+- Localized across all 11 locales, `npm run i18n:check` passes.
+- Verified: 164 files / 1425 tests (+10 new), typecheck/lint clean. **Not verified against a real running app** — same GUI-automation gap as the recovery dialog above; this needs a manual check or proper computer-use access next time.
+- **Not done**: an inline "record a new take right now" flow. Retake currently works by picking an *already-recorded* file via the library picker (record separately, then retake with it) — a genuinely nice fast-follow (trigger a scoped recording directly from the "Retake" button) but deliberately deferred to keep this slice tight and fully tested.
+
+## Phase 2 still open
+Guardian's media-health monitor (dropped-frame/stalled-stream detection — confirmed absent, would need new live-polling logic), explicit failsafe-chain user messaging for webcam/system-audio degradation (webcam-fails-silently behavior already exists in `useScreenRecorder.ts`, just has no user-facing notice), Replay Buffer (rolling disk-backed buffer + `globalShortcut` — confirmed nothing like this exists at all in the codebase), and the inline retake-recording flow noted above.
 
 ## Next session: recommended order
 1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
 2. Do NOT re-run the identity/branding sweep — it's done. Do NOT start performance work — operator said later.
-3. Continue Phase 2: pick up media-health monitoring, or move to Retake Mode/Clips (needs new data model design first), or Replay Buffer (needs `globalShortcut` infrastructure built from scratch). All three are still fully open.
+3. Continue Phase 2: pick up media-health monitoring, Replay Buffer (needs `globalShortcut` infrastructure built from scratch), or the inline retake-recording fast-follow. All three are still fully open.
 4. Keep using the build → asar-dump → fix cycle for any future "is this really gone" branding verification.
 5. For any future live-GUI verification, request proper computer-use access rather than improvising coordinate clicks.
 6. Keep the same discipline: typecheck + lint + full test suite after every logical change, real commits with clear messages, update these state files at natural checkpoints (not necessarily every single commit).

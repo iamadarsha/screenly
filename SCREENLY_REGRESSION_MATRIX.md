@@ -1,5 +1,15 @@
 # SCREENLY Regression Matrix
 
+## Status as of 2026-09-26, Phase 2 session (Retake Mode slice)
+
+| Check | Status | Notes |
+|---|---|---|
+| `npm run typecheck` | ✅ PASS | clean |
+| `npm run lint` | ✅ PASS | same 1 pre-existing unrelated warning |
+| `npm run test` | ✅ PASS | 164 files / 1425 tests (+10 new: `retake.test.ts`) |
+| `npm run i18n:check` | ✅ PASS | all 11 locales structurally consistent after adding clip.retake/retaking/switchTake |
+| Retake Mode vs. a real running app | ⬜ NOT VERIFIED | same GUI-automation gap noted below — typechecks and reuses established prop/component patterns, but not screenshotted live |
+
 ## Status as of 2026-09-26, Phase 2 session (Recording Guardian slice)
 
 | Check | Status | Notes |
