@@ -67,6 +67,11 @@ Last updated: 2026-09-26 (Phase 1 done; Phase 2 nearly done — Guardian, Retake
 ## Phase 2 remaining
 Only the inline retake-recording flow (currently requires picking an already-recorded file rather than recording inline from the "Retake" button) is still open. Everything else in Phase 2's feature list (Recording Guardian, Retake Mode, media-health monitoring, Instant Replay) now has a first implementation.
 
+**Important scoping discovery about the inline retake-recording flow** (found while starting to build it, not yet implemented): it's more involved than "just call `getDisplayMedia` from the editor window." `electron/main.ts`'s `setDisplayMediaRequestHandler` (~line 1092) is gated by `shouldGrantDisplayCapture()` in `electron/permissionPolicy.ts`, which **requires** `request.isTrustedCaptureWindow` to be true - and that's only ever true for the HUD window's main frame (`isHudMainFrame` check). This is a deliberate security boundary restricting who can initiate screen capture, not an oversight - editor-window content (or anything else) calling `getDisplayMedia` today gets silently rejected (empty stream). Two real options for the fast-follow, neither of which is a quick add:
+1. Extend the trusted-window policy to also trust the editor window's main frame - a genuine security-policy change that needs its own careful review (what else could that additional trust surface expose?), not something to bundle into a feature PR without flagging it explicitly to the operator first.
+2. Keep capture HUD-only and instead coordinate cross-window: hide/repurpose the HUD to record while the editor stays open in the background, then route the finished file back to the specific editor window + clip that requested it. Real architecture work - session/window-targeting doesn't currently exist for this.
+Recommend option 2 as the safer default unless the operator explicitly prefers relaxing the capture-trust boundary. Either way, budget this as a real feature, not a small addition.
+
 ## Next session: recommended order
 1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
 2. Do NOT re-run the identity/branding sweep — it's done. Do NOT start performance work — operator said later.
