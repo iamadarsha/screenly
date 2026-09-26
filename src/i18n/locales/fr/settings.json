@@ -24,7 +24,10 @@
 		"mutedState": "Le son est coupé",
 		"unmutedState": "Le son est activé",
 		"separateClipFromAudio": "Séparer le clip de l'audio",
-		"delete": "Supprimer le clip"
+		"delete": "Supprimer le clip",
+		"retake": "Refaire cette prise",
+		"retaking": "Nouvelle prise en cours…",
+		"switchTake": "Changer de prise"
 	},
 	"effects": {
 		"title": "Effets vidéo",

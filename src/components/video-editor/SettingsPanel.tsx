@@ -438,6 +438,10 @@ interface SettingsPanelProps {
 	onClipSpeedChange?: (speed: number) => void;
 	onClipMutedChange?: (muted: boolean) => void;
 	onClipDelete?: (id: string) => void;
+	selectedClipHasPreviousTakes?: boolean;
+	isRetakingSelectedClip?: boolean;
+	onClipRetake?: () => void;
+	onClipSwitchTake?: () => void;
 	selectedAudioId?: string | null;
 	selectedAudioVolume?: number | null;
 	selectedAudioNormalize?: boolean | null;
@@ -894,6 +898,10 @@ export function SettingsPanel({
 	onClipSpeedChange,
 	onClipMutedChange,
 	onClipDelete,
+	selectedClipHasPreviousTakes = false,
+	isRetakingSelectedClip = false,
+	onClipRetake,
+	onClipSwitchTake,
 	selectedAudioId,
 	selectedAudioVolume,
 	selectedAudioNormalize,
@@ -2726,6 +2734,32 @@ export function SettingsPanel({
 					<Button type="button" variant="ghost" onClick={onResetClipAudio}>
 						{tSettings("clip.resetAudioSettings", "Reset audio settings")}
 					</Button>
+				)}
+				{(onClipRetake || (selectedClipHasPreviousTakes && onClipSwitchTake)) && (
+					<div className="flex flex-col gap-2 border-t border-border/60 pt-3">
+						{onClipRetake && (
+							<Button
+								type="button"
+								variant="secondary"
+								disabled={isRetakingSelectedClip}
+								onClick={onClipRetake}
+							>
+								{isRetakingSelectedClip
+									? tSettings("clip.retaking", "Retaking…")
+									: tSettings("clip.retake", "Retake this clip")}
+							</Button>
+						)}
+						{selectedClipHasPreviousTakes && onClipSwitchTake && (
+							<Button
+								type="button"
+								variant="ghost"
+								disabled={isRetakingSelectedClip}
+								onClick={onClipSwitchTake}
+							>
+								{tSettings("clip.switchTake", "Switch take")}
+							</Button>
+						)}
+					</div>
 				)}
 			</section>
 		);

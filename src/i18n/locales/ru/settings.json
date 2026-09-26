@@ -24,7 +24,10 @@
 		"mutedState": "Звук выключен",
 		"unmutedState": "Звук включен",
 		"separateClipFromAudio": "Отделить аудио от клипа",
-		"delete": "Удалить клип"
+		"delete": "Удалить клип",
+		"retake": "Переснять этот клип",
+		"retaking": "Пересъёмка…",
+		"switchTake": "Сменить дубль"
 	},
 	"effects": {
 		"title": "Эффекты",

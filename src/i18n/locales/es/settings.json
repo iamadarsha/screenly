@@ -24,7 +24,10 @@
 		"mutedState": "El audio está silenciado",
 		"unmutedState": "El audio se está reproduciendo",
 		"separateClipFromAudio": "Separar clip del audio",
-		"delete": "Eliminar clip"
+		"delete": "Eliminar clip",
+		"retake": "Regrabar este clip",
+		"retaking": "Regrabando…",
+		"switchTake": "Cambiar toma"
 	},
 	"effects": {
 		"title": "Efectos de video",

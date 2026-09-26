@@ -4,6 +4,7 @@ import { RecordlySignInDialog, type SignInReason } from "@/components/auth/Recor
 import { useRecordlyAuth } from "@/components/auth/useRecordlyAuth";
 import { useVideoSourceRecovery } from "../hooks/useVideoSourceRecovery";
 import { useRecordingLibrary } from "../library/useRecordingLibrary";
+import { useClipRetake } from "../library/useClipRetake";
 import { RecordingLibraryPanel } from "../library/RecordingLibraryPanel";
 import { RECORDING_DRAG_TYPE } from "@/types/recordingLibrary";
 import { Button } from "@/components/ui/button";
@@ -94,10 +95,20 @@ export function EditorShell(props: Props) {
 		previewAspectRatioValue,
 	} = props;
 	const library = useRecordingLibrary(project, timeline, ui, appearance);
+	const retake = useClipRetake(project, timeline, ui);
+	const [retakeTargetClipId, setRetakeTargetClipId] = useState<string | null>(null);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Changing the active inspector closes the Videos view.
 	useEffect(() => {
 		library.setOpen(false);
+		setRetakeTargetClipId(null);
 	}, [ui.activeEffectSection, library.setOpen]);
+	const startRetake = useCallback(
+		(clipId: string) => {
+			setRetakeTargetClipId(clipId);
+			library.setOpen(true);
+		},
+		[library.setOpen],
+	);
 	const timelinePanelRef = useRef<HTMLDivElement>(null);
 	const wasImporting = useRef(false);
 	useEffect(() => {
@@ -328,7 +339,23 @@ export function EditorShell(props: Props) {
 						accountUser={auth.user}
 						onAccountClick={() => requestSignIn("account")}
 						panelContent={
-							library.open ? <RecordingLibraryPanel library={library} /> : undefined
+							library.open ? (
+								<RecordingLibraryPanel
+									library={library}
+									retakeMode={
+										retakeTargetClipId
+											? {
+													onSelect: (path) => {
+														const clipId = retakeTargetClipId;
+														setRetakeTargetClipId(null);
+														library.setOpen(false);
+														void retake.retakeClip(clipId, path);
+													},
+												}
+											: undefined
+									}
+								/>
+							) : undefined
 						}
 						t={t}
 						activeSection={ui.activeEffectSection}
@@ -341,7 +368,21 @@ export function EditorShell(props: Props) {
 							timeline.setSelectedCaptionId(null);
 							ui.setActiveEffectSection(section);
 						}}
-						settingsPanelProps={settingsPanelProps}
+						settingsPanelProps={{
+							...settingsPanelProps,
+							selectedClipHasPreviousTakes: Boolean(
+								timeline.clipRegions.find(
+									(clip) => clip.id === timeline.selectedClipId,
+								)?.previousTakes?.length,
+							),
+							isRetakingSelectedClip: retake.retakingClipId === timeline.selectedClipId,
+							onClipRetake: timeline.selectedClipId
+								? () => startRetake(timeline.selectedClipId as string)
+								: undefined,
+							onClipSwitchTake: timeline.selectedClipId
+								? () => retake.switchTake(timeline.selectedClipId as string)
+								: undefined,
+						}}
 					/>
 					<EditorPreviewPanel
 						t={t}

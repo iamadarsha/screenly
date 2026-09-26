@@ -24,7 +24,10 @@
 		"mutedState": "Audio is gedempt",
 		"unmutedState": "Audio wordt afgespeeld",
 		"separateClipFromAudio": "Clip van audio scheiden",
-		"delete": "Clip verwijderen"
+		"delete": "Clip verwijderen",
+		"retake": "Deze clip opnieuw opnemen",
+		"retaking": "Opnieuw opnemen…",
+		"switchTake": "Wissel opname"
 	},
 	"effects": {
 		"title": "Video-effecten",

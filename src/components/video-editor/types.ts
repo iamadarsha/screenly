@@ -244,7 +244,22 @@ export interface ClipRegion {
 	speed: number;
 	muted?: boolean;
 	showSourceAudio?: boolean;
+	/**
+	 * Earlier recordings of this same timeline position, most recent last. Retaking
+	 * a clip pushes its current source range here rather than discarding it, so the
+	 * original footage is never lost and the user can swap back with "Switch Take."
+	 */
+	previousTakes?: ClipTake[];
 }
+
+export type ClipTake = {
+	sourceStartMs: number;
+	sourceMinMs?: number;
+	sourceMaxMs?: number;
+	/** This take's timeline span (endMs - startMs) at the moment it was replaced. */
+	timelineDurationMs: number;
+	recordedAt: number;
+};
 
 export function getClipSourceStartMs(clip: ClipRegion): number {
 	return Number.isFinite(clip.sourceStartMs) ? (clip.sourceStartMs as number) : clip.startMs;

@@ -24,7 +24,10 @@
 		"mutedState": "O áudio está mudo",
 		"unmutedState": "O áudio está tocando",
 		"separateClipFromAudio": "Separar áudio do clipe",
-		"delete": "Excluir clipe"
+		"delete": "Excluir clipe",
+		"retake": "Regravar este clipe",
+		"retaking": "Regravando…",
+		"switchTake": "Trocar versão"
 	},
 	"effects": {
 		"title": "Efeitos de vídeo",

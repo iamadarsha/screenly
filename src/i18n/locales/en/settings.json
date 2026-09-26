@@ -30,7 +30,10 @@
 		"mutedState": "Audio is muted",
 		"unmutedState": "Audio is playing",
 		"separateClipFromAudio": "Separate clip from audio",
-		"delete": "Delete Clip"
+		"delete": "Delete Clip",
+		"retake": "Retake this clip",
+		"retaking": "Retaking…",
+		"switchTake": "Switch take"
 	},
 	"effects": {
 		"title": "Video Effects",

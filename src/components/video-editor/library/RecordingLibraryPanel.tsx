@@ -17,8 +17,11 @@ import type { useRecordingLibrary } from "./useRecordingLibrary";
 
 export function RecordingLibraryPanel({
 	library,
+	retakeMode,
 }: {
 	library: ReturnType<typeof useRecordingLibrary>;
+	/** When set, picking a recording replaces a clip's footage instead of adding a new one. */
+	retakeMode?: { onSelect: (path: string) => void };
 }) {
 	const panelRef = useRef<HTMLElement>(null);
 	const [query, setQuery] = useState("");
@@ -74,7 +77,9 @@ export function RecordingLibraryPanel({
 			}}
 		>
 			<header className="flex min-h-14 shrink-0 items-center gap-2 px-5 py-3">
-				<h2 className="flex-1 text-[14px] font-semibold">Clips</h2>
+				<h2 className="flex-1 text-[14px] font-semibold">
+					{retakeMode ? "Choose a replacement recording" : "Clips"}
+				</h2>
 				<Dropdown>
 					<HeroButton
 						isIconOnly
@@ -232,8 +237,16 @@ export function RecordingLibraryPanel({
 							type="button"
 							className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
 							disabled={library.busy || library.importing}
-							onClick={() => toggle(entry.path, !library.selected.has(entry.path))}
-							onDoubleClick={() => void library.addToTimeline(entry.path)}
+							onClick={() =>
+								retakeMode
+									? retakeMode.onSelect(entry.path)
+									: toggle(entry.path, !library.selected.has(entry.path))
+							}
+							onDoubleClick={() =>
+								retakeMode
+									? retakeMode.onSelect(entry.path)
+									: void library.addToTimeline(entry.path)
+							}
 							title={entry.name}
 						>
 							<RecordingThumbnail entry={entry} />
@@ -257,10 +270,18 @@ export function RecordingLibraryPanel({
 							variant="ghost"
 							size="icon"
 							className="size-7 shrink-0"
-							aria-label={`Add ${entry.name} to timeline`}
-							title="Add to timeline"
+							aria-label={
+								retakeMode
+									? `Use ${entry.name} as the new take`
+									: `Add ${entry.name} to timeline`
+							}
+							title={retakeMode ? "Use as new take" : "Add to timeline"}
 							disabled={library.busy || library.importing}
-							onClick={() => void library.addToTimeline(entry.path)}
+							onClick={() =>
+								retakeMode
+									? retakeMode.onSelect(entry.path)
+									: void library.addToTimeline(entry.path)
+							}
 						>
 							<Plus className="size-4" />
 						</Button>

@@ -24,7 +24,10 @@
 		"mutedState": "Audio ist stummgeschaltet",
 		"unmutedState": "Audio wird wiedergegeben",
 		"separateClipFromAudio": "Clip vom Audio trennen",
-		"delete": "Clip löschen"
+		"delete": "Clip löschen",
+		"retake": "Diesen Clip neu aufnehmen",
+		"retaking": "Wird neu aufgenommen…",
+		"switchTake": "Aufnahme wechseln"
 	},
 	"effects": {
 		"title": "Videoeffekte",
