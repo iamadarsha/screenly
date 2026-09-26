@@ -16,7 +16,7 @@ import {
 	stopWindowBoundsCapture,
 } from "../cursor/bounds";
 import { getDisplayBoundsForSource, getDisplayWorkAreaForSource } from "../recording/ffmpeg";
-import { selectedSource, setSelectedSource } from "../state";
+import { pendingRetake, selectedSource, setPendingRetake, setSelectedSource } from "../state";
 import type { SelectedSource, WindowBounds } from "../types";
 import { getScreen, parseWindowId } from "../utils";
 import { bringWindowsWindowForward, resolveWindowsWindowBounds } from "../windowsWindowControl";
@@ -596,9 +596,15 @@ body{background:transparent;overflow:hidden;width:100vw;height:100vh}
 		}
 		createSourceSelectorWindow();
 	});
-	ipcMain.handle("show-recording-hud", (event) => {
+	ipcMain.handle("show-recording-hud", (event, retakeClipId?: string) => {
 		setHudRecordingPreparationActive(true);
-		recordingNavigation.setReturnWindow(BrowserWindow.fromWebContents(event.sender));
+		const returnWindow = BrowserWindow.fromWebContents(event.sender);
+		recordingNavigation.setReturnWindow(returnWindow);
+		setPendingRetake(
+			typeof retakeClipId === "string" && returnWindow
+				? { clipId: retakeClipId, returnWindowId: returnWindow.id }
+				: null,
+		);
 		const hud = getHudOverlayWindow();
 		if (hud && !hud.isDestroyed()) {
 			hud.show();
@@ -609,7 +615,34 @@ body{background:transparent;overflow:hidden;width:100vw;height:100vh}
 	});
 	ipcMain.handle("show-project-dashboard", () => {
 		setHudRecordingPreparationActive(false);
+		// Backing out to the dashboard abandons any in-progress retake - a later,
+		// unrelated recording must never be silently treated as a retake.
+		setPendingRetake(null);
 		recordingNavigation.open(false);
+	});
+	ipcMain.handle("get-pending-retake", () => {
+		return pendingRetake ? { clipId: pendingRetake.clipId } : null;
+	});
+	ipcMain.handle("finish-retake-recording", (_, videoPath: string) => {
+		const retake = pendingRetake;
+		setPendingRetake(null);
+		if (!retake) {
+			return { success: false, error: "No retake recording is in progress." };
+		}
+
+		const target = BrowserWindow.fromId(retake.returnWindowId);
+		if (!target || target.isDestroyed()) {
+			return { success: false, error: "The editor window that requested this retake was closed." };
+		}
+
+		if (target.isMinimized()) target.restore();
+		target.show();
+		target.focus();
+		target.webContents.send("retake-recording-ready", {
+			clipId: retake.clipId,
+			videoPath,
+		});
+		return { success: true };
 	});
 	ipcMain.handle("switch-to-editor", () => {
 		setHudRecordingPreparationActive(false);

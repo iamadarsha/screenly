@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { packClipSequence, rippleRegionAnchors, rippleRegions } from "../clipSequence";
 import { applyRetakeToClip, swapToPreviousTake } from "../retake";
@@ -68,6 +68,26 @@ export function useClipRetake(
 		}
 	}, []);
 
+	// Reused by both "pick an existing recording" and "record a fresh take."
+	const retakeClipRef = useRef(retakeClip);
+	retakeClipRef.current = retakeClip;
+
+	const recordNewTakeForClip = useCallback(async (clipId: string) => {
+		if (lock.current) return;
+		try {
+			await window.electronAPI.showRecordingHud(clipId);
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Could not open the recorder");
+		}
+	}, []);
+
+	useEffect(() => {
+		if (typeof window.electronAPI?.onRetakeRecordingReady !== "function") return;
+		return window.electronAPI.onRetakeRecordingReady(({ clipId, videoPath }) => {
+			void retakeClipRef.current(clipId, videoPath);
+		});
+	}, []);
+
 	const switchTake = useCallback((clipId: string) => {
 		const { timeline } = current.current;
 		const before = timeline.clipRegions;
@@ -88,5 +108,5 @@ export function useClipRetake(
 		timeline.setAudioRegions((current) => rippleRegionAnchors(current, before, packed));
 	}, []);
 
-	return { retakeClip, switchTake, retakingClipId };
+	return { retakeClip, recordNewTakeForClip, switchTake, retakingClipId };
 }

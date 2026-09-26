@@ -25,7 +25,8 @@
 		"unmutedState": "Audio wordt afgespeeld",
 		"separateClipFromAudio": "Clip van audio scheiden",
 		"delete": "Clip verwijderen",
-		"retake": "Deze clip opnieuw opnemen",
+		"retake": "Bestaande opname kiezen",
+		"recordNewTake": "Nieuwe opname maken",
 		"retaking": "Opnieuw opnemen…",
 		"switchTake": "Wissel opname"
 	},

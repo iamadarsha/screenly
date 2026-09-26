@@ -31,7 +31,8 @@
 		"unmutedState": "Audio is playing",
 		"separateClipFromAudio": "Separate clip from audio",
 		"delete": "Delete Clip",
-		"retake": "Retake this clip",
+		"retake": "Choose existing recording",
+		"recordNewTake": "Record new take",
 		"retaking": "Retaking…",
 		"switchTake": "Switch take"
 	},

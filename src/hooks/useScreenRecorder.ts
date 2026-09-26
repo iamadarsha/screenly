@@ -741,6 +741,20 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		async (videoPath: string, webcamPath: string | null) => {
 			const start = performance.now();
 			console.log("[PERF:RENDERER] Finalize Session & Switch to Editor: STARTED");
+
+			const pendingRetake = await window.electronAPI.getPendingRetake?.();
+			if (pendingRetake) {
+				setFinalizing(false);
+				const result = await window.electronAPI.finishRetakeRecording(videoPath);
+				if (!result.success) {
+					toast.error(result.error || "Could not return to the editor with the new take");
+				}
+				console.log(
+					`[PERF:RENDERER] Finalize Retake Recording: COMPLETED in ${(performance.now() - start).toFixed(2)}ms`,
+				);
+				return;
+			}
+
 			const shouldHideOverlayCursor = hideEditorOverlayCursorByDefault.current;
 			try {
 				if (webcamPath) {

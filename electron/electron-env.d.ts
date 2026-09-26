@@ -860,7 +860,12 @@ interface Window {
 			path?: string;
 			error?: string;
 		}>;
-		showRecordingHud: () => Promise<void>;
+		showRecordingHud: (retakeClipId?: string) => Promise<void>;
+		getPendingRetake: () => Promise<{ clipId: string } | null>;
+		finishRetakeRecording: (videoPath: string) => Promise<{ success: boolean; error?: string }>;
+		onRetakeRecordingReady: (
+			callback: (result: { clipId: string; videoPath: string }) => void,
+		) => () => void;
 		createProjectFile: (
 			data: unknown,
 			thumbnail?: string | null,

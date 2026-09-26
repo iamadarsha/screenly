@@ -376,6 +376,9 @@ export function EditorShell(props: Props) {
 								)?.previousTakes?.length,
 							),
 							isRetakingSelectedClip: retake.retakingClipId === timeline.selectedClipId,
+							onClipRecordNewTake: timeline.selectedClipId
+								? () => void retake.recordNewTakeForClip(timeline.selectedClipId as string)
+								: undefined,
 							onClipRetake: timeline.selectedClipId
 								? () => startRetake(timeline.selectedClipId as string)
 								: undefined,

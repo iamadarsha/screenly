@@ -25,7 +25,8 @@
 		"unmutedState": "오디오가 재생 중",
 		"separateClipFromAudio": "클립에서 오디오 분리",
 		"delete": "클립 삭제",
-		"retake": "이 클립 재촬영",
+		"retake": "기존 녹화 선택",
+		"recordNewTake": "새 테이크 녹화",
 		"retaking": "재촬영 중…",
 		"switchTake": "테이크 전환"
 	},

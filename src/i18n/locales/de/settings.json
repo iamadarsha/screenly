@@ -25,7 +25,8 @@
 		"unmutedState": "Audio wird wiedergegeben",
 		"separateClipFromAudio": "Clip vom Audio trennen",
 		"delete": "Clip löschen",
-		"retake": "Diesen Clip neu aufnehmen",
+		"retake": "Vorhandene Aufnahme wählen",
+		"recordNewTake": "Neue Aufnahme erstellen",
 		"retaking": "Wird neu aufgenommen…",
 		"switchTake": "Aufnahme wechseln"
 	},

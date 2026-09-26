@@ -25,7 +25,8 @@
 		"unmutedState": "O áudio está tocando",
 		"separateClipFromAudio": "Separar áudio do clipe",
 		"delete": "Excluir clipe",
-		"retake": "Regravar este clipe",
+		"retake": "Escolher gravação existente",
+		"recordNewTake": "Gravar nova versão",
 		"retaking": "Regravando…",
 		"switchTake": "Trocar versão"
 	},

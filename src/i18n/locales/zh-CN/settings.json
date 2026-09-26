@@ -25,7 +25,8 @@
 		"unmutedState": "音频正在播放",
 		"separateClipFromAudio": "将剪辑与音频分离",
 		"delete": "删除片段",
-		"retake": "重新录制此片段",
+		"retake": "选择现有录制",
+		"recordNewTake": "录制新版本",
 		"retaking": "重新录制中…",
 		"switchTake": "切换录制版本"
 	},

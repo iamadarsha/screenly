@@ -25,7 +25,8 @@
 		"unmutedState": "Audio in riproduzione",
 		"separateClipFromAudio": "Separa clip dall'audio",
 		"delete": "Elimina clip",
-		"retake": "Rigira questa clip",
+		"retake": "Scegli una registrazione esistente",
+		"recordNewTake": "Registra una nuova ripresa",
 		"retaking": "Rigirando…",
 		"switchTake": "Cambia ripresa"
 	},

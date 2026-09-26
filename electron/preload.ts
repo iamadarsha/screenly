@@ -513,7 +513,21 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	getSources: async (opts: Electron.SourcesOptions) => {
 		return await ipcRenderer.invoke("get-sources", opts);
 	},
-	showRecordingHud: () => ipcRenderer.invoke("show-recording-hud"),
+	showRecordingHud: (retakeClipId?: string) =>
+		ipcRenderer.invoke("show-recording-hud", retakeClipId),
+	getPendingRetake: () => ipcRenderer.invoke("get-pending-retake"),
+	finishRetakeRecording: (videoPath: string) =>
+		ipcRenderer.invoke("finish-retake-recording", videoPath),
+	onRetakeRecordingReady: (
+		callback: (result: { clipId: string; videoPath: string }) => void,
+	) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			result: { clipId: string; videoPath: string },
+		) => callback(result);
+		ipcRenderer.on("retake-recording-ready", listener);
+		return () => ipcRenderer.removeListener("retake-recording-ready", listener);
+	},
 	createProjectFile: (data: unknown, thumbnail?: string | null) =>
 		ipcRenderer.invoke("create-project-file", data, thumbnail),
 	renameLibraryProject: (path: string, name: string) =>

@@ -18,6 +18,15 @@ export let currentProjectPath: string | null = null;
 export let currentVideoPath: string | null = null;
 export let currentRecordingSession: RecordingSessionData | null = null;
 
+// ── Retake Mode: recording a replacement take for a specific clip ────────────
+/**
+ * Set when a recording is started to become a specific clip's new take
+ * (instead of a brand-new project). The return window is looked up by id
+ * (not held directly) so this state never keeps a destroyed BrowserWindow
+ * reference alive.
+ */
+export let pendingRetake: { clipId: string; returnWindowId: number } | null = null;
+
 // ── Security: approved read paths ─────────────────────────────────────────────
 export const approvedLocalReadPaths = new Set<string>();
 
@@ -290,4 +299,8 @@ export function setCachedNativeVideoEncoder(
 
 export function setNativeHelperMigrationPromise(v: Promise<void> | null) {
 	nativeHelperMigrationPromise = v;
+}
+
+export function setPendingRetake(v: { clipId: string; returnWindowId: number } | null) {
+	pendingRetake = v;
 }
