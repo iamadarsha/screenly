@@ -619,6 +619,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	setRecordingState: (recording: boolean) => {
 		return ipcRenderer.invoke("set-recording-state", recording);
 	},
+	getDiskSpaceStatus: () => {
+		return ipcRenderer.invoke("get-disk-space-status");
+	},
+	getRecoverableRecordings: () => {
+		return ipcRenderer.invoke("get-recoverable-recordings");
+	},
+	discardRecoverableRecording: (checkpointPath: string, deleteVideo: boolean) => {
+		return ipcRenderer.invoke("discard-recoverable-recording", checkpointPath, deleteVideo);
+	},
 	setCursorScale: (scale: number) => {
 		return ipcRenderer.invoke("set-cursor-scale", scale);
 	},

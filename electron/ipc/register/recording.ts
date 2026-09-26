@@ -15,7 +15,7 @@ import {
 import { getHudCaptureExcludedProcessIds } from "../../../src/lib/hudCaptureProtection";
 import { showCursor } from "../../cursorHider";
 import { getHudOverlayCaptureProtectionEnabled, beginHudCaptureProtection } from "../../windows";
-import { ALLOW_SCREENLY_WINDOW_CAPTURE } from "../constants";
+import { ALLOW_SCREENLY_WINDOW_CAPTURE, RECORDING_CHECKPOINT_HEARTBEAT_MS } from "../constants";
 import { startWindowBoundsCapture, stopWindowBoundsCapture } from "../cursor/bounds";
 import { startInteractionCapture, stopInteractionCapture } from "../cursor/interaction";
 import { startNativeCursorMonitor, stopNativeCursorMonitor } from "../cursor/monitor";
@@ -71,6 +71,14 @@ import {
 	waitForNativeCaptureStart,
 	waitForNativeCaptureStop,
 } from "../recording/mac";
+import { getDiskSpaceStatus } from "../recording/diskSpace";
+import {
+	discardRecoverableRecording,
+	finalizeRecordingCheckpoint,
+	scanForRecoverableRecordings,
+	updateRecordingCheckpointHeartbeat,
+	writeRecordingCheckpointStart,
+} from "../recording/guardian";
 import { resolveRecordedVideoStoragePath } from "../recording/storagePath";
 import {
 	attachWindowsCaptureLifecycle,
@@ -393,6 +401,88 @@ async function resolveExistingPath(...candidates: Array<string | null | undefine
 	}
 
 	return null;
+}
+
+let checkpointHeartbeatInterval: NodeJS.Timeout | null = null;
+let checkpointVideoPath: string | null = null;
+
+function resolveActiveRecordingPathForCheckpoint(): {
+	videoPath: string;
+	backend: "mac-screencapturekit" | "windows-wgc" | "ffmpeg" | "browser";
+	capturesMicrophone: boolean;
+	capturesSystemAudio: boolean;
+} | null {
+	if (nativeCaptureTargetPath) {
+		return {
+			videoPath: nativeCaptureTargetPath,
+			backend: "mac-screencapturekit",
+			capturesMicrophone: Boolean(nativeCaptureMicrophonePath),
+			capturesSystemAudio: Boolean(nativeCaptureSystemAudioPath),
+		};
+	}
+	if (windowsCaptureTargetPath) {
+		return {
+			videoPath: windowsCaptureTargetPath,
+			backend: "windows-wgc",
+			capturesMicrophone: Boolean(windowsMicAudioPath),
+			capturesSystemAudio: Boolean(windowsSystemAudioPath),
+		};
+	}
+	if (ffmpegCaptureTargetPath) {
+		return {
+			videoPath: ffmpegCaptureTargetPath,
+			backend: "ffmpeg",
+			capturesMicrophone: false,
+			capturesSystemAudio: false,
+		};
+	}
+	if (currentVideoPath) {
+		return {
+			videoPath: currentVideoPath,
+			backend: "browser",
+			capturesMicrophone: false,
+			capturesSystemAudio: false,
+		};
+	}
+	return null;
+}
+
+function beginRecordingCheckpoint(): void {
+	const active = resolveActiveRecordingPathForCheckpoint();
+	if (!active) return;
+
+	checkpointVideoPath = active.videoPath;
+	void writeRecordingCheckpointStart({
+		videoPath: active.videoPath,
+		backend: active.backend,
+		capturesMicrophone: active.capturesMicrophone,
+		capturesSystemAudio: active.capturesSystemAudio,
+		// Webcam capture happens entirely renderer-side (getUserMedia); the main
+		// process has no direct visibility into it. This is cosmetic metadata only
+		// - recovery correctness depends solely on the checkpoint file existing,
+		// not on this flag - so it's left false rather than threading extra state
+		// through every recording-start call site for a non-load-bearing field.
+		capturesWebcam: false,
+	});
+
+	if (checkpointHeartbeatInterval) clearInterval(checkpointHeartbeatInterval);
+	checkpointHeartbeatInterval = setInterval(() => {
+		if (checkpointVideoPath) {
+			void updateRecordingCheckpointHeartbeat(checkpointVideoPath);
+		}
+	}, RECORDING_CHECKPOINT_HEARTBEAT_MS);
+}
+
+function endRecordingCheckpoint(): void {
+	if (checkpointHeartbeatInterval) {
+		clearInterval(checkpointHeartbeatInterval);
+		checkpointHeartbeatInterval = null;
+	}
+	const videoPath = checkpointVideoPath ?? resolveActiveRecordingPathForCheckpoint()?.videoPath;
+	checkpointVideoPath = null;
+	if (videoPath) {
+		void finalizeRecordingCheckpoint(videoPath);
+	}
 }
 
 export function registerRecordingHandlers(
@@ -1875,6 +1965,7 @@ export function registerRecordingHandlers(
 			sampleCursorPoint();
 			startCursorSampling();
 			void startInteractionCapture();
+			beginRecordingCheckpoint();
 		} else {
 			setIsCursorCaptureActive(false);
 			stopCursorCapture();
@@ -1886,6 +1977,7 @@ export function registerRecordingHandlers(
 			resetCursorCaptureClock();
 			snapshotCursorTelemetryForPersistence();
 			setActiveCursorSamples([]);
+			endRecordingCheckpoint();
 		}
 
 		const source = selectedSource || { name: "Screen" };
@@ -1902,6 +1994,24 @@ export function registerRecordingHandlers(
 			onRecordingStateChange(recording, source.name);
 		}
 	});
+
+	ipcMain.handle("get-disk-space-status", async () => {
+		const dir = await getRecordingsDir();
+		return getDiskSpaceStatus(dir);
+	});
+
+	ipcMain.handle("get-recoverable-recordings", async () => {
+		const dir = await getRecordingsDir();
+		return scanForRecoverableRecordings(dir);
+	});
+
+	ipcMain.handle(
+		"discard-recoverable-recording",
+		async (_, checkpointPath: string, deleteVideo: boolean) => {
+			await discardRecoverableRecording(checkpointPath, { deleteVideo });
+			return { success: true };
+		},
+	);
 
 	ipcMain.handle("pause-cursor-capture", (_, pausedAtMs?: unknown) => {
 		pauseCursorCaptureAtBoundary(normalizeRendererTimestampMs(pausedAtMs));

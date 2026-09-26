@@ -62,6 +62,26 @@ export type RecordingSessionManifest = {
 	timeOffsetMs?: number;
 };
 
+export type RecordingCheckpoint = {
+	version: 1;
+	videoFileName: string;
+	backend: "mac-screencapturekit" | "windows-wgc" | "ffmpeg" | "browser";
+	startedAt: number;
+	lastHeartbeatAt: number;
+	capturesMicrophone: boolean;
+	capturesSystemAudio: boolean;
+	capturesWebcam: boolean;
+};
+
+export type RecoverableRecording = {
+	checkpointPath: string;
+	videoPath: string;
+	startedAt: number;
+	lastHeartbeatAt: number;
+	fileSizeBytes: number;
+	backend: RecordingCheckpoint["backend"];
+};
+
 export type ProjectLibraryEntry = {
 	path: string;
 	name: string;

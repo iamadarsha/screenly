@@ -5,6 +5,7 @@ import { DashboardFilters } from "./DashboardFilters";
 import { DashboardGrid } from "./DashboardGrid";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardToolbar } from "./DashboardToolbar";
+import { RecoverableRecordingsDialog } from "./RecoverableRecordingsDialog";
 import type { DashboardProps } from "./types";
 import { useDashboardModel } from "./useDashboardModel";
 export function Dashboard(props: DashboardProps) {
@@ -12,6 +13,7 @@ export function Dashboard(props: DashboardProps) {
 	const view = { ...props, ...model };
 	return (
 		<>
+			<RecoverableRecordingsDialog onRecovered={() => void model.refreshRaw()} />
 			<Modal isOpen={props.open} onOpenChange={props.onOpenChange}>
 				<Modal.Backdrop>
 					<Modal.Container size="full">

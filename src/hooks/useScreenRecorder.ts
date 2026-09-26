@@ -1149,6 +1149,16 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			return null;
 		}
 
+		if (window.electronAPI?.getDiskSpaceStatus) {
+			const diskSpace = await window.electronAPI.getDiskSpaceStatus();
+			if (diskSpace.status === "critical") {
+				alert(
+					"Not enough free disk space to start recording. Free up space and try again.",
+				);
+				return null;
+			}
+		}
+
 		recordingSessionTimestamp.current = Date.now();
 		resetRecordingClock(recordingSessionTimestamp.current);
 		await prepareWebcamRecorder();
@@ -1565,6 +1575,39 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		setWebcamDeviceId(deviceId);
 		void window.electronAPI.setRecordingPreferences({ webcamDeviceId: deviceId });
 	}, []);
+
+	useEffect(() => {
+		if (!recording || typeof window.electronAPI?.getDiskSpaceStatus !== "function") {
+			return;
+		}
+
+		const DISK_SPACE_CHECK_INTERVAL_MS = 30_000;
+		const toastId = "low-disk-space";
+		let cancelled = false;
+
+		const checkDiskSpace = async () => {
+			const result = await window.electronAPI.getDiskSpaceStatus();
+			if (cancelled) return;
+			if (result.status === "low" || result.status === "critical") {
+				toast.warning(
+					result.status === "critical"
+						? "Disk space is critically low. Stop recording soon to avoid losing footage."
+						: "Disk space is running low.",
+					{ id: toastId, duration: Infinity },
+				);
+			} else {
+				toast.dismiss(toastId);
+			}
+		};
+
+		void checkDiskSpace();
+		const interval = setInterval(() => void checkDiskSpace(), DISK_SPACE_CHECK_INTERVAL_MS);
+		return () => {
+			cancelled = true;
+			clearInterval(interval);
+			toast.dismiss(toastId);
+		};
+	}, [recording]);
 
 	useEffect(() => {
 		let cleanup: (() => void) | undefined;

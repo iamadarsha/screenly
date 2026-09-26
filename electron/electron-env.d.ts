@@ -590,6 +590,24 @@ interface Window {
 			error?: string;
 		}>;
 		setRecordingState: (recording: boolean) => Promise<void>;
+		getDiskSpaceStatus: () => Promise<{
+			status: "ok" | "low" | "critical" | "unknown";
+			freeBytes: number | null;
+		}>;
+		getRecoverableRecordings: () => Promise<
+			Array<{
+				checkpointPath: string;
+				videoPath: string;
+				startedAt: number;
+				lastHeartbeatAt: number;
+				fileSizeBytes: number;
+				backend: "mac-screencapturekit" | "windows-wgc" | "ffmpeg" | "browser";
+			}>
+		>;
+		discardRecoverableRecording: (
+			checkpointPath: string,
+			deleteVideo: boolean,
+		) => Promise<{ success: boolean }>;
 		getCursorTelemetry: (videoPath?: string) => Promise<{
 			success: boolean;
 			samples: CursorTelemetryPoint[];

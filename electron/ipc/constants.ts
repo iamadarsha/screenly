@@ -14,6 +14,10 @@ export const APP_SETTINGS_FILE = path.join(USER_DATA_PATH, "app-settings.json");
 export const AUTO_RECORDING_PREFIX = "recording-";
 export const ALLOW_SCREENLY_WINDOW_CAPTURE = Boolean(process.env["VITE_DEV_SERVER_URL"]);
 export const RECORDING_SESSION_MANIFEST_SUFFIX = ".screenly-session.json";
+export const RECORDING_CHECKPOINT_SUFFIX = ".screenly-checkpoint.json";
+export const RECORDING_CHECKPOINT_HEARTBEAT_MS = 5_000;
+export const DISK_SPACE_LOW_WARNING_BYTES = 2 * 1024 ** 3; // 2 GB
+export const DISK_SPACE_CRITICAL_BYTES = 500 * 1024 ** 2; // 500 MB
 export const WHISPER_MODEL_DOWNLOAD_URL =
 	"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin";
 export const WHISPER_MODEL_DIR = path.join(USER_DATA_PATH, "whisper");
