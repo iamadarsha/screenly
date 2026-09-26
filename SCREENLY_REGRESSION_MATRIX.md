@@ -9,7 +9,7 @@
 | `npm run test` | ✅ PASS | 167 files / 1455 tests (+30 new across mediaHealth, replayBuffer, replayBufferSettingsStore) |
 | Media-health pure logic | ✅ VERIFIED | 10 unit tests |
 | Replay buffer pure logic + real concat | ✅ VERIFIED | 5 of the 14 replayBuffer tests use real ffmpeg-generated chunk files and a real concat run, not mocks — caught a real `-safe 1` vs `-safe 0` bug before it shipped |
-| Replay buffer's actual background `avfoundation` capture | ⬜ NOT VERIFIED | attempted directly from a bare shell; hung due to that shell process lacking macOS Screen Recording permission (avfoundation blocks silently when unauthorized, doesn't error) — an environment limitation of testing outside the signed app, not a known code defect, but genuinely unverified. **Do this first next session.** |
+| Replay buffer's actual background `avfoundation` capture | ✅ VERIFIED (after a real fix) | Built the real signed app, pre-enabled Instant Replay, and found segments genuinely never rotated (frozen file size). Root-caused to avfoundation reporting a broken timebase in this environment, confirmed by testing the app's existing shipped capture command directly. Fixed with a forced constant output frame rate (`-r 30`); rebuilt, relaunched (properly this time — see note below about the single-instance lock), and confirmed real chunk rotation plus a full save via the actual global shortcut (real keystroke, not a coordinate click) producing a valid, playable 16.7s `replay-*.mp4`. |
 
 ## Status as of 2026-09-26, Phase 2 session (Retake Mode slice)
 
