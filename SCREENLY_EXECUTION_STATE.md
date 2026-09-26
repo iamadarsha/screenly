@@ -1,12 +1,12 @@
 # SCREENLY Execution State
 
-Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode slices done)
+Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode + Media Health slices done)
 
 ## Current phase
-**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2: Guardian's disk-monitoring + crash-recovery-checkpoint, and Retake Mode's alternate-takes mechanic, are both done. Still open: Guardian's media-health monitor, Replay Buffer, and an inline retake-recording flow. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
+**Phase 2 — Recording Reliability + Capture Workflow, in progress.** Phase 1's identity/rebrand slice is done and verified. Within Phase 2: Guardian (disk-monitoring, crash-recovery-checkpoint, stalled-stream + device-disconnect media-health), and Retake Mode's alternate-takes mechanic, are done. Still open: Replay Buffer and an inline retake-recording flow. **Operator has explicitly said: keep building forward through the phases first ("build everything then fix"), come back for performance/polish later.** Do not stop to polish earlier phases unless something is actually broken.
 
 ## Environment
-- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 16 commits.
+- Working dir: `/Users/iamadarsha/Screenly`, git repo, pushed to **https://github.com/iamadarsha/screenly** (private), branch `main`, 18 commits.
 - Node v24.14.0 / npm 11.9.0. `gh` CLI authenticated as `iamadarsha`.
 - Bundle id: `app.screenly.desktop`. Protocol scheme: `screenly://`.
 - Primary target: signed dmg (mac) / exe (win) installable via GitHub release.
@@ -52,8 +52,14 @@ Last updated: 2026-09-26 (Phase 1 done; Phase 2 Recording Guardian + Retake Mode
 - Verified: 164 files / 1425 tests (+10 new), typecheck/lint clean. **Not verified against a real running app** — same GUI-automation gap as the recovery dialog above; this needs a manual check or proper computer-use access next time.
 - **Not done**: an inline "record a new take right now" flow. Retake currently works by picking an *already-recorded* file via the library picker (record separately, then retake with it) — a genuinely nice fast-follow (trigger a scoped recording directly from the "Retake" button) but deliberately deferred to keep this slice tight and fully tested.
 
+## Media-health monitoring (this session, done)
+- `electron/ipc/recording/mediaHealth.ts`: pure stalled-stream classifier (no output-file growth for >15s while actively recording = stalled), sampled on the same 5s heartbeat the Guardian checkpoint already runs. 10 unit tests. Pause-aware on both mac/Windows native paths (sample buffer resets on pause/resume so a legitimate pause is never misread as a stall).
+- `useScreenRecorder.ts`: webcam/mic tracks get an `ended` listener → toast notice on OS-level device disconnect mid-recording (the silent-continue behavior itself was already correct, it just had no user notification).
+- **Not done, confirmed infeasible in this pass**: system-audio-failure detection/messaging. Unlike mic (has a working Windows fallback keyed off a specific native-helper stdout marker) and webcam (plain JS MediaStream), system audio capture happens entirely inside the native ScreenCaptureKit/WGC helper processes with no JS-visible failure signal yet — would need new marker-parsing work per platform, out of scope here.
+- Verified: 165 files / 1435 tests (+10), typecheck/lint clean. Not verified live (same GUI-automation gap as Guardian/Retake).
+
 ## Phase 2 still open
-Guardian's media-health monitor (dropped-frame/stalled-stream detection — confirmed absent, would need new live-polling logic), explicit failsafe-chain user messaging for webcam/system-audio degradation (webcam-fails-silently behavior already exists in `useScreenRecorder.ts`, just has no user-facing notice), Replay Buffer (rolling disk-backed buffer + `globalShortcut` — confirmed nothing like this exists at all in the codebase), and the inline retake-recording flow noted above.
+Replay Buffer (rolling disk-backed buffer + `globalShortcut` — confirmed nothing like this exists at all in the codebase), and the inline retake-recording flow noted above.
 
 ## Next session: recommended order
 1. Read this file, `SCREENLY_DECISIONS.md`, `SCREENLY_UI_INVENTORY.md`, `SCREENLY_RELEASE_READINESS.md` before doing anything else.
