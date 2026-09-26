@@ -48,6 +48,12 @@ describe("buildReplayBufferCaptureArgs", () => {
 		expect(args[args.length - 1]).toBe(getReplayBufferChunkOutputPattern("/tmp/chunks"));
 	});
 
+	it("forces a constant output frame rate (regression: avfoundation can report a broken timebase that silently prevents segment_time from ever cutting)", () => {
+		const args = buildReplayBufferCaptureArgs("darwin", "/tmp/chunks", 60, 10);
+		expect(args).toContain("-r");
+		expect(args[args.indexOf("-r") + 1]).toBe("30");
+	});
+
 	it("builds gdigrab segment args on win32", () => {
 		const args = buildReplayBufferCaptureArgs("win32", "/tmp/chunks", 30, 10);
 		expect(args).toContain("gdigrab");

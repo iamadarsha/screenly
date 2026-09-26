@@ -10,6 +10,7 @@ import { getRecordingsDir } from "../utils";
 const runFfmpeg = promisify(execFile);
 
 export const REPLAY_BUFFER_CHUNK_FILENAME_PATTERN = "chunk-%03d.mp4";
+export const REPLAY_BUFFER_FRAME_RATE = 30;
 
 /** How many rolling chunk files are needed to cover the requested buffer duration. */
 export function computeSegmentWrapCount(
@@ -44,6 +45,16 @@ export function buildReplayBufferCaptureArgs(
 	const wrapCount = computeSegmentWrapCount(durationSec, chunkSec);
 	const outputPattern = getReplayBufferChunkOutputPattern(chunkDir);
 	const segmentArgs = [
+		// Force a sane, constant output frame rate independent of whatever the
+		// input device reports. Confirmed by direct testing: some environments'
+		// avfoundation screen input reports a broken/garbage timebase (a
+		// nonsensical "1000000 tbr"), which doesn't stop the single-file
+		// capture path elsewhere in this app (it just finalizes on close), but
+		// it silently breaks the segment muxer's time-based cutting - without
+		// `-r` here, `-segment_time` never fires and the "buffer" is just one
+		// endlessly-growing file that's never split into chunks at all.
+		"-r",
+		String(REPLAY_BUFFER_FRAME_RATE),
 		"-f",
 		"segment",
 		"-segment_time",
@@ -69,7 +80,7 @@ export function buildReplayBufferCaptureArgs(
 			"-capture_cursor",
 			"1",
 			"-framerate",
-			"30",
+			String(REPLAY_BUFFER_FRAME_RATE),
 			"-i",
 			"1:none",
 			...segmentArgs,
@@ -82,7 +93,7 @@ export function buildReplayBufferCaptureArgs(
 			"-f",
 			"gdigrab",
 			"-framerate",
-			"30",
+			String(REPLAY_BUFFER_FRAME_RATE),
 			"-draw_mouse",
 			"1",
 			"-i",
