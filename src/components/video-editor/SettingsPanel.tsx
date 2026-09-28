@@ -582,6 +582,7 @@ interface SettingsPanelProps {
 	onCaptionDelete?: (id: string) => void;
 	onDeleteTranscriptWordRange?: (target: CaptionEditTarget) => void;
 	onRemoveSilenceRegions?: (intervals: Array<{ startMs: number; endMs: number }>) => void;
+	videoSourcePath?: string | null;
 	onApplyTranslation?: (translated: Array<{id: string; text: string}>) => void;
 	onSeekToSourceMs?: (sourceMs: number) => void;
 	nativeCaptureUnavailableSession?: boolean;
@@ -1046,6 +1047,7 @@ export function SettingsPanel({
 	onRemoveSilenceRegions,
 	onApplyTranslation,
 	onSeekToSourceMs,
+	videoSourcePath,
 	nativeCaptureUnavailableSession = false,
 	onOpenNativeCaptureUnavailableModal,
 }: SettingsPanelProps) {
@@ -2315,6 +2317,7 @@ export function SettingsPanel({
 						onRemoveSilenceRegions={onRemoveSilenceRegions}
 						onSeekToMs={onSeekToSourceMs}
 						currentSourceTimeMs={captionCurrentTimeMs}
+						videoSourcePath={videoSourcePath ?? null}
 					/>
 				</div>
 			)}

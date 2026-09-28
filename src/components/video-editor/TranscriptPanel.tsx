@@ -28,6 +28,7 @@ interface TranscriptPanelProps {
 	onRemoveSilenceRegions?: (intervals: Array<{ startMs: number; endMs: number }>) => void;
 	onSeekToMs?: (sourceMs: number) => void;
 	currentSourceTimeMs?: number;
+	videoSourcePath?: string | null;
 }
 
 function flattenWords(cues: CaptionCue[]): FlatWord[] {
@@ -57,6 +58,7 @@ export function TranscriptPanel({
 	onRemoveSilenceRegions,
 	onSeekToMs,
 	currentSourceTimeMs,
+	videoSourcePath,
 }: TranscriptPanelProps) {
 	const t = useScopedT("settings");
 	const [anchorFlatIndex, setAnchorFlatIndex] = useState<number | null>(null);
@@ -89,13 +91,11 @@ export function TranscriptPanel({
 		if (!window.electronAPI?.detectSilenceRegions) return;
 		setDetectingSilence(true);
 		try {
-			// Use the first clip's source path if available
-			const videoPath = (window as unknown as { __screenly_video_path?: string }).__screenly_video_path;
-			if (!videoPath) {
+			if (!videoSourcePath) {
 				setSilenceIntervals([]);
 				return;
 			}
-			const result = await window.electronAPI.detectSilenceRegions(videoPath, 500);
+			const result = await window.electronAPI.detectSilenceRegions(videoSourcePath, 500);
 			if (result.success && result.intervals.length > 0) {
 				setSilenceIntervals(result.intervals);
 			} else {
@@ -106,7 +106,7 @@ export function TranscriptPanel({
 		} finally {
 			setDetectingSilence(false);
 		}
-	}, []);
+	}, [videoSourcePath]);
 
 	const handleRemoveAllSilence = useCallback(() => {
 		if (silenceIntervals.length === 0 || !onRemoveSilenceRegions) return;

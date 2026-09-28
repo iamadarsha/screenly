@@ -374,6 +374,7 @@ export default function VideoEditor() {
 		annotationCommands,
 		handleDeleteTranscriptWordRange,
 		handleRemoveSilenceRegions,
+		videoSourcePath,
 		autoCaptionController,
 		handleSeek: playback.handleSeek,
 		effectiveShowCursor,

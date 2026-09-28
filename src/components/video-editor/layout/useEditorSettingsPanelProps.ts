@@ -29,6 +29,7 @@ type Input = {
 	captionCommands: ReturnType<typeof useCaptionCommands>;
 	annotationCommands: ReturnType<typeof useAnnotationRegionCommands>;
 	handleDeleteTranscriptWordRange: (target: CaptionEditTarget) => void;
+	videoSourcePath: string | null;
 	handleRemoveSilenceRegions: (intervals: Array<{ startMs: number; endMs: number }>) => void;
 	autoCaptionController: ReturnType<typeof useAutoCaptionController>;
 	handleSeek?: (time: number, options?: { pause?: boolean }) => void;
@@ -62,6 +63,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		annotationCommands,
 		handleDeleteTranscriptWordRange,
 		handleRemoveSilenceRegions,
+		videoSourcePath,
 		autoCaptionController,
 		handleSeek,
 		effectiveShowCursor,
@@ -234,6 +236,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onCaptionDelete: captionCommands.handleCaptionDelete,
 		onDeleteTranscriptWordRange: handleDeleteTranscriptWordRange,
 		onRemoveSilenceRegions: handleRemoveSilenceRegions,
+		videoSourcePath,
 		onApplyTranslation: (translated: Array<{id: string; text: string}>) => {
 			timeline.setAutoCaptions(prev => prev.map(cue => {
 				const match = translated.find(t => t.id === cue.id);
