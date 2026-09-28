@@ -11,7 +11,11 @@ import type { useZoomRegionCommands } from "../hooks/useZoomRegionCommands";
 import { SettingsPanel } from "../SettingsPanel";
 import type { useAppearanceState } from "../state/useAppearanceState";
 import type { useTimelineState } from "../state/useTimelineState";
-import { type EditorEffectSection, mapTimelineTimeToSourceTime } from "../types";
+import {
+	type EditorEffectSection,
+	mapSourceTimeToTimelineTime,
+	mapTimelineTimeToSourceTime,
+} from "../types";
 
 type Input = {
 	activeEffectSection: EditorEffectSection;
@@ -24,6 +28,7 @@ type Input = {
 	annotationCommands: ReturnType<typeof useAnnotationRegionCommands>;
 	handleDeleteTranscriptWordRange: (target: CaptionEditTarget) => void;
 	autoCaptionController: ReturnType<typeof useAutoCaptionController>;
+	handleSeek?: (time: number, options?: { pause?: boolean }) => void;
 	effectiveShowCursor: boolean;
 	handleShowCursorChange: (show: boolean) => void;
 	currentTime: number;
@@ -53,6 +58,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		annotationCommands,
 		handleDeleteTranscriptWordRange,
 		autoCaptionController,
+		handleSeek,
 		effectiveShowCursor,
 		handleShowCursorChange,
 		currentTime,
@@ -211,6 +217,10 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onCaptionMerge: captionCommands.handleCaptionMerge,
 		onCaptionDelete: captionCommands.handleCaptionDelete,
 		onDeleteTranscriptWordRange: handleDeleteTranscriptWordRange,
+		onSeekToSourceMs: (sourceMs: number) => {
+			const timelineMs = mapSourceTimeToTimelineTime(sourceMs, timeline.clipRegions);
+			handleSeek?.(timelineMs / 1000, { pause: true });
+		},
 		onDownloadWhisperSmallModel: autoCaptionController.handleDownloadWhisperSmallModel,
 		onDeleteWhisperSmallModel: autoCaptionController.handleDeleteWhisperSmallModel,
 		nativeCaptureUnavailableSession: sessionNativeCaptureUnavailable,

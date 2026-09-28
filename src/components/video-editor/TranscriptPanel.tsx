@@ -25,6 +25,8 @@ interface FlatWord {
 interface TranscriptPanelProps {
 	cues: CaptionCue[];
 	onDeleteWordRange: (target: CaptionEditTarget) => void;
+	onSeekToMs?: (sourceMs: number) => void;
+	currentSourceTimeMs?: number;
 }
 
 function flattenWords(cues: CaptionCue[]): FlatWord[] {
@@ -48,19 +50,24 @@ function flattenWords(cues: CaptionCue[]): FlatWord[] {
 	return flat;
 }
 
-export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProps) {
+export function TranscriptPanel({
+	cues,
+	onDeleteWordRange,
+	onSeekToMs,
+	currentSourceTimeMs,
+}: TranscriptPanelProps) {
 	const t = useScopedT("settings");
 	const [anchorFlatIndex, setAnchorFlatIndex] = useState<number | null>(null);
 	const [selectedFlatIndexes, setSelectedFlatIndexes] = useState<Set<number>>(new Set());
 
 	const flatWords = useMemo(() => flattenWords(cues), [cues]);
+	const fillerMatches = useMemo(() => detectFillerWords(cues), [cues]);
 	const fillerFlatIndexes = useMemo(() => {
-		const matches = detectFillerWords(cues);
-		const byCueWord = new Set(matches.map((m) => `${m.cueId}:${m.cueWordIndex}`));
+		const byCueWord = new Set(fillerMatches.map((m) => `${m.cueId}:${m.cueWordIndex}`));
 		return new Set(
 			flatWords.filter((w) => byCueWord.has(`${w.cueId}:${w.cueWordIndex}`)).map((w) => w.flatIndex),
 		);
-	}, [cues, flatWords]);
+	}, [fillerMatches, flatWords]);
 	const repeatedPhraseMatches = useMemo(() => detectRepeatedPhrases(cues), [cues]);
 	const repeatedFlatIndexes = useMemo(() => {
 		const byCueWord = new Set<string>();
@@ -88,6 +95,7 @@ export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProp
 		if (!extend || anchorFlatIndex === null) {
 			setAnchorFlatIndex(word.flatIndex);
 			setSelectedFlatIndexes(new Set([word.flatIndex]));
+			onSeekToMs?.(word.startMs);
 			return;
 		}
 		const [lo, hi] =
@@ -97,6 +105,16 @@ export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProp
 		const next = new Set<number>();
 		for (let i = lo; i <= hi; i += 1) next.add(i);
 		setSelectedFlatIndexes(next);
+		onSeekToMs?.(word.startMs);
+	};
+
+	const handleWordDoubleClick = (word: FlatWord) => {
+		const cueWords = flatWords.filter((w) => w.cueId === word.cueId);
+		if (cueWords.length === 0) return;
+		const next = new Set<number>(cueWords.map((w) => w.flatIndex));
+		setAnchorFlatIndex(cueWords[0].flatIndex);
+		setSelectedFlatIndexes(next);
+		onSeekToMs?.(cueWords[0].startMs);
 	};
 
 	const clearSelection = () => {
@@ -131,6 +149,18 @@ export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProp
 		clearSelection();
 	};
 
+	const handleRemoveSingleFiller = (match: { cueId: string; cueWordIndex: number }) => {
+		const word = flatWords.find(
+			(w) => w.cueId === match.cueId && w.cueWordIndex === match.cueWordIndex,
+		);
+		if (!word) return;
+		const target = buildTargetFromFlatIndexes(new Set([word.flatIndex]));
+		if (target) {
+			onDeleteWordRange(target);
+			clearSelection();
+		}
+	};
+
 	const handleRemoveRepeatedPhrase = (match: RepeatedPhraseMatch) => {
 		const indexes = new Set<number>();
 		for (let i = match.firstStartIndex; i < match.firstEndIndexExclusive; i += 1) {
@@ -143,30 +173,50 @@ export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProp
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="max-h-[280px] overflow-y-auto rounded-lg bg-foreground/[0.03] p-3 text-sm leading-relaxed">
+			<div
+				tabIndex={0}
+				role="region"
+				aria-label={t("captions.transcript.title", "Transcript editor")}
+				onKeyDown={(e) => {
+					if (e.key === "Backspace" || e.key === "Delete") {
+						if (selectedFlatIndexes.size > 0) {
+							e.preventDefault();
+							handleDeleteSelected();
+						}
+					}
+				}}
+				className="max-h-[280px] overflow-y-auto rounded-lg bg-foreground/[0.03] p-3 text-sm leading-relaxed outline-none focus-visible:ring-1 focus-visible:ring-[#2563EB]/50"
+			>
 				{flatWords.map((word) => {
 					const isSelected = selectedFlatIndexes.has(word.flatIndex);
 					const isFiller = fillerFlatIndexes.has(word.flatIndex);
 					const isRepeated = repeatedFlatIndexes.has(word.flatIndex);
+					const isCurrent =
+						currentSourceTimeMs !== undefined &&
+						currentSourceTimeMs >= word.startMs &&
+						currentSourceTimeMs < word.endMs;
 					return (
 						<span key={word.flatIndex}>
 							{word.leadingSpace ? " " : ""}
 							<button
 								type="button"
 								onClick={(event) => selectWord(word, event.shiftKey)}
+								onDoubleClick={() => handleWordDoubleClick(word)}
 								className={[
-									"rounded px-0.5 py-0.5 transition-colors",
+									"rounded px-0.5 py-0.5 transition-colors cursor-pointer",
 									isSelected
 										? "bg-[#2563EB] text-white"
-										: isFiller
-											? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-											: isRepeated
-												? "bg-orange-500/15 underline decoration-orange-500/60 decoration-2 underline-offset-2"
-												: "text-foreground hover:bg-foreground/10",
+										: isCurrent
+											? "bg-[#2563EB]/20 text-[#2563EB] dark:text-blue-400 font-medium ring-1 ring-[#2563EB]/40"
+											: isFiller
+												? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+												: isRepeated
+													? "bg-orange-500/15 underline decoration-orange-500/60 decoration-2 underline-offset-2"
+													: "text-foreground hover:bg-foreground/10",
 								].join(" ")}
 								title={
 									isFiller
-										? t("captions.transcript.fillerWord", "Filler word")
+										? t("captions.transcript.fillerWord", "Filler word — click to select")
 										: isRepeated
 											? t("captions.transcript.repeatedPhrase", "Possible false start")
 											: undefined
@@ -178,6 +228,30 @@ export function TranscriptPanel({ cues, onDeleteWordRange }: TranscriptPanelProp
 					);
 				})}
 			</div>
+
+			{fillerMatches.length > 0 && (
+				<div className="flex flex-col gap-1.5">
+					<span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+						{t("captions.transcript.fillerWords", "Detected filler words")} ({fillerMatches.length})
+					</span>
+					<div className="flex flex-wrap gap-1.5">
+						{fillerMatches.map((match, i) => (
+							<Button
+								key={`${match.cueId}-${match.cueWordIndex}-${i}`}
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-6 gap-1 px-2 text-[11px] bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+								onClick={() => handleRemoveSingleFiller(match)}
+								title={t("captions.transcript.removeFiller", "Delete filler word & ripple")}
+							>
+								<span>"{match.text}"</span>
+								<Trash className="h-2.5 w-2.5 opacity-70" />
+							</Button>
+						))}
+					</div>
+				</div>
+			)}
 
 			{repeatedPhraseMatches.length > 0 && (
 				<div className="flex flex-col gap-1.5">

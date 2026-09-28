@@ -563,6 +563,7 @@ interface SettingsPanelProps {
 	onCaptionMerge?: (idA: string, idB: string) => void;
 	onCaptionDelete?: (id: string) => void;
 	onDeleteTranscriptWordRange?: (target: CaptionEditTarget) => void;
+	onSeekToSourceMs?: (sourceMs: number) => void;
 	nativeCaptureUnavailableSession?: boolean;
 	onOpenNativeCaptureUnavailableModal?: () => void;
 }
@@ -1011,6 +1012,7 @@ export function SettingsPanel({
 	onCaptionMerge,
 	onCaptionDelete,
 	onDeleteTranscriptWordRange,
+	onSeekToSourceMs,
 	nativeCaptureUnavailableSession = false,
 	onOpenNativeCaptureUnavailableModal,
 }: SettingsPanelProps) {
@@ -2276,6 +2278,8 @@ export function SettingsPanel({
 					<TranscriptPanel
 						cues={autoCaptions}
 						onDeleteWordRange={onDeleteTranscriptWordRange}
+						onSeekToMs={onSeekToSourceMs}
+						currentSourceTimeMs={captionCurrentTimeMs}
 					/>
 				</div>
 			)}
