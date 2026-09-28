@@ -116,7 +116,7 @@ export function EditorDialogs({
 									aria-label={t("editor.project.saveNameLabel", "Project name")}
 								/>
 								<span className="shrink-0 px-3 text-xs font-medium text-muted-foreground/70">
-									.recordly
+									.screenly
 								</span>
 							</Card>
 						</div>

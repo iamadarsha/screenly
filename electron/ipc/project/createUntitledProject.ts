@@ -1,10 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { PROJECT_FILE_EXTENSION } from "../constants";
+
 /** Publish a complete new project without overwriting a concurrent or existing save. */
 export async function createUntitledProject(directory: string, contents: string) {
 	await fs.mkdir(directory, { recursive: true });
-	const temporary = path.join(directory, `.recordly-new-${randomUUID()}.tmp`);
+	const temporary = path.join(directory, `.screenly-new-${randomUUID()}.tmp`);
 	try {
 		const file = await fs.open(temporary, "wx");
 		try {
@@ -16,7 +18,7 @@ export async function createUntitledProject(directory: string, contents: string)
 		for (let suffix = 0; ; suffix++) {
 			const target = path.join(
 				directory,
-				`Untitled Project${suffix ? ` ${suffix}` : ""}.recordly`,
+				`Untitled Project${suffix ? ` ${suffix}` : ""}.${PROJECT_FILE_EXTENSION}`,
 			);
 			try {
 				await fs.link(temporary, target);

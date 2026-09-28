@@ -258,4 +258,42 @@ describe("local media path policy", () => {
 		expect(result.success).toBe(true);
 		await expect(resolveApprovedLocalMediaPath(audioPath)).resolves.toBe(resolvedAudioPath);
 	});
+
+	it("recognizes .screenly, .recordly, and .openscreen as valid project file extensions", async () => {
+		const { hasProjectFileExtension } = await import("./manager");
+		expect(hasProjectFileExtension("demo.screenly")).toBe(true);
+		expect(hasProjectFileExtension("DEMO.SCREENLY")).toBe(true);
+		expect(hasProjectFileExtension("legacy.recordly")).toBe(true);
+		expect(hasProjectFileExtension("ancient.openscreen")).toBe(true);
+		expect(hasProjectFileExtension("video.mp4")).toBe(false);
+		expect(hasProjectFileExtension("document.txt")).toBe(false);
+	});
+
+	it("loads both modern .screenly and legacy .recordly project files transparently", async () => {
+		const { loadProjectFromPath } = await import("./manager");
+		const videoPath = path.join(tempPath, "clip.mp4");
+		await fs.writeFile(videoPath, "sample-video");
+
+		const screenlyPath = path.join(tempPath, "modern.screenly");
+		await fs.writeFile(
+			screenlyPath,
+			JSON.stringify({ version: 1, videoPath, editor: {} }),
+			"utf-8",
+		);
+
+		const recordlyPath = path.join(tempPath, "legacy.recordly");
+		await fs.writeFile(
+			recordlyPath,
+			JSON.stringify({ version: 1, videoPath, editor: {} }),
+			"utf-8",
+		);
+
+		const screenlyResult = await loadProjectFromPath(screenlyPath);
+		expect(screenlyResult.success).toBe(true);
+		expect(screenlyResult.path).toBe(screenlyPath);
+
+		const recordlyResult = await loadProjectFromPath(recordlyPath);
+		expect(recordlyResult.success).toBe(true);
+		expect(recordlyResult.path).toBe(recordlyPath);
+	});
 });
