@@ -12,33 +12,49 @@
 
 const MODEL_ALIAS = "gemma-4-e4b-it-q4_0";
 
-let modelReadyPromise: Promise<boolean> | null = null;
+let modelReadyPromise: Promise<{ ready: boolean; reason?: string }> | null = null;
 
 /** Reset between test runs / after a model download or deletion changes availability. */
 export function resetLocalModelReadyState() {
 	modelReadyPromise = null;
 }
 
-async function ensureModelReady(): Promise<boolean> {
-	if (!window.electronAi || !window.electronAPI?.getAiModelStatus) {
-		return false;
+async function ensureModelReady(): Promise<{ ready: boolean; reason?: string }> {
+	if (typeof window === "undefined" || !window.electronAi || !window.electronAPI?.getAiModelStatus) {
+		return { ready: false, reason: "Local AI model is not downloaded or unavailable." };
 	}
 	if (!modelReadyPromise) {
 		modelReadyPromise = (async () => {
 			try {
 				const status = await window.electronAPI.getAiModelStatus();
-				if (!status?.success || status.status !== "downloaded") {
-					return false;
+				if (!status?.success) {
+					return { ready: false, reason: "Unable to check local AI model status." };
+				}
+				if (status.status === "corrupted") {
+					return {
+						ready: false,
+						reason: "Local AI model file failed verification — please re-download.",
+					};
+				}
+				if (status.status !== "downloaded") {
+					return { ready: false, reason: "Local AI model is not downloaded or unavailable." };
 				}
 				await window.electronAi?.create({ modelAlias: MODEL_ALIAS, temperature: 0.3 });
-				return true;
+				return { ready: true };
 			} catch (error) {
 				console.warn("[ai] Failed to initialize local model:", error);
-				return false;
+				return {
+					ready: false,
+					reason: error instanceof Error ? error.message : "Failed to initialize local model.",
+				};
 			}
 		})();
 	}
-	return modelReadyPromise;
+	const outcome = await modelReadyPromise;
+	if (!outcome.ready) {
+		modelReadyPromise = null;
+	}
+	return outcome;
 }
 
 export type LocalModelJsonResult<T> =
@@ -56,9 +72,12 @@ export interface LocalModelJsonRequest<T> {
 export async function promptLocalModelForJson<T>(
 	request: LocalModelJsonRequest<T>,
 ): Promise<LocalModelJsonResult<T>> {
-	const ready = await ensureModelReady();
-	if (!ready || !window.electronAi) {
-		return { ok: false, reason: "Local AI model is not downloaded or unavailable." };
+	const readiness = await ensureModelReady();
+	if (!readiness.ready || typeof window === "undefined" || !window.electronAi) {
+		return {
+			ok: false,
+			reason: readiness.reason ?? "Local AI model is not downloaded or unavailable.",
+		};
 	}
 
 	let raw: string;
