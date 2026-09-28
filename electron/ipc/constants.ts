@@ -46,12 +46,31 @@ export const GEMMA4_E4B_MODEL_SHA256 =
 export const GEMMA4_E4B_MODEL_PATH = path.join(AI_MODELS_DIR, "gemma-4-E4B-it-Q4_0.gguf");
 /** Storage directory for generated voiceovers. */
 export const VOICEOVERS_DIR = path.join(USER_DATA_PATH, "voiceovers");
-/** Kokoro-82M ONNX model (quantized q8, ~92 MB) for local zero-cloud voiceover generation. */
+/**
+ * Kokoro-82M ONNX model (quantized q8, ~92 MB weights) for local zero-cloud voiceover generation.
+ * `@huggingface/transformers` (used by kokoro-js) expects a real HF model id and a matching local
+ * directory layout, not a bare path to the weights file — KOKORO_TTS_MODEL_PATH is therefore the exact
+ * path transformers.js's own `env.localModelPath` + model-id resolution looks for, so the big,
+ * checksum-verified download here is actually found and used locally, never re-fetched. The much
+ * smaller tokenizer/config/voice files transformers.js also needs are NOT independently
+ * checksum-pinned by us — they are fetched once, on first real generation, via the library's own
+ * HTTPS Hugging Face client and cached (see KOKORO_TTS_MODEL_ID usage in voiceoverService.ts) for
+ * fully offline reuse afterward.
+ */
+export const KOKORO_HF_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
 export const KOKORO_TTS_MODEL_URL =
 	"https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model_quantized.onnx";
 export const KOKORO_TTS_MODEL_SHA256 =
 	"fbae9257e1e05ffc727e951ef9b9c98418e6d79f1c9b6b13bd59f5c9028a1478";
-export const KOKORO_TTS_MODEL_PATH = path.join(AI_MODELS_DIR, "kokoro-82m-v1.0-q8.onnx");
+export const KOKORO_TTS_MODEL_PATH = path.join(
+	AI_MODELS_DIR,
+	"onnx-community",
+	"Kokoro-82M-v1.0-ONNX",
+	"onnx",
+	"model_quantized.onnx",
+);
+/** Legacy flat location used before the local-directory-layout fix; migrated automatically if found. */
+export const KOKORO_TTS_MODEL_LEGACY_PATH = path.join(AI_MODELS_DIR, "kokoro-82m-v1.0-q8.onnx");
 export const COMPANION_AUDIO_LAYOUTS = [
 	{ platform: "mac" as const, systemSuffix: ".system.m4a", micSuffix: ".mic.m4a" },
 	{ platform: "win" as const, systemSuffix: ".system.wav", micSuffix: ".mic.wav" },

@@ -5,6 +5,9 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { app } from "electron";
 import {
+	AI_MODELS_DIR,
+	KOKORO_HF_MODEL_ID,
+	KOKORO_TTS_MODEL_LEGACY_PATH,
 	KOKORO_TTS_MODEL_PATH,
 	KOKORO_TTS_MODEL_SHA256,
 	KOKORO_TTS_MODEL_URL,
@@ -22,6 +25,28 @@ import {
 } from "./modelManager";
 
 const execFileAsync = promisify(execFile);
+
+// Loading KokoroTTS re-parses the ~92 MB weights file and tokenizer every time; cache the
+// loaded instance across generate calls instead of reloading it per request.
+let cachedKokoroTTS: import("kokoro-js").KokoroTTS | null = null;
+
+async function getKokoroTTS(): Promise<import("kokoro-js").KokoroTTS> {
+	if (cachedKokoroTTS) return cachedKokoroTTS;
+	const { KokoroTTS } = await import("kokoro-js");
+	const { env } = await import("@huggingface/transformers");
+	// KOKORO_TTS_MODEL_PATH already holds the real, checksum-verified weights file at the exact
+	// path transformers.js's local-model resolution expects (env.localModelPath + model id +
+	// relative file path) — see constants.ts. Pointing localModelPath at AI_MODELS_DIR means that
+	// file is found locally and never re-downloaded. The small tokenizer/config/voice files are
+	// not part of our checksum-verified download; they are fetched once here via transformers.js's
+	// own HTTPS Hugging Face client and cached under env.cacheDir for offline reuse afterward.
+	env.localModelPath = `${AI_MODELS_DIR}${path.sep}`;
+	cachedKokoroTTS = await KokoroTTS.from_pretrained(KOKORO_HF_MODEL_ID, {
+		dtype: "q8",
+		device: "cpu",
+	});
+	return cachedKokoroTTS;
+}
 
 export const KOKORO_MODEL_DESCRIPTOR: ModelDescriptor = {
 	id: "kokoro-82m-v1.0-q8",
@@ -74,24 +99,49 @@ export interface GenerateVoiceoverResult {
 	error?: string;
 }
 
+/**
+ * Before this fix, the weights file was downloaded to a flat path that
+ * `KokoroTTS.from_pretrained` could never actually find (it needs a real HF-model-id
+ * shaped directory). Move an existing flat-path download into the correct location
+ * once, so a prior real download isn't silently wasted / re-fetched.
+ */
+async function migrateLegacyModelFileIfNeeded(): Promise<void> {
+	try {
+		await fs.access(KOKORO_TTS_MODEL_PATH);
+		return; // already at the correct location
+	} catch {
+		/* fall through to check the legacy path */
+	}
+	try {
+		await fs.access(KOKORO_TTS_MODEL_LEGACY_PATH);
+	} catch {
+		return; // nothing to migrate
+	}
+	await fs.mkdir(path.dirname(KOKORO_TTS_MODEL_PATH), { recursive: true });
+	await fs.rename(KOKORO_TTS_MODEL_LEGACY_PATH, KOKORO_TTS_MODEL_PATH);
+}
+
 export async function getVoiceoverModelStatus(): Promise<{
 	success: boolean;
 	status: ModelStatus;
 	path: string;
 }> {
+	await migrateLegacyModelFileIfNeeded();
 	const status = await getModelStatus(KOKORO_MODEL_DESCRIPTOR);
 	return { success: true, status, path: KOKORO_TTS_MODEL_PATH };
 }
 
-export function downloadVoiceoverModel(options: {
+export async function downloadVoiceoverModel(options: {
 	onProgress?: (progress: number) => void;
 	signal?: AbortSignal;
 }): Promise<ModelDownloadResult> {
+	await migrateLegacyModelFileIfNeeded();
 	return downloadModel(KOKORO_MODEL_DESCRIPTOR, options);
 }
 
 export async function deleteVoiceoverModel(): Promise<{ success: boolean }> {
 	await deleteModel(KOKORO_MODEL_DESCRIPTOR);
+	cachedKokoroTTS = null;
 	return { success: true };
 }
 
@@ -161,11 +211,7 @@ export async function generateVoiceoverAudio(
 	const modelStatus = await getModelStatus(KOKORO_MODEL_DESCRIPTOR);
 	if (modelStatus === "downloaded" && !isRecordingActive()) {
 		try {
-			const { KokoroTTS } = await import("kokoro-js");
-			const tts = await KokoroTTS.from_pretrained(KOKORO_TTS_MODEL_PATH, {
-				dtype: "q8",
-				device: "cpu",
-			});
+			const tts = await getKokoroTTS();
 			const rawAudio = await tts.generate(trimmedText, {
 				voice: selectedVoiceId as Parameters<typeof tts.generate>[1] extends { voice?: infer V } ? V : never,
 				speed: selectedSpeed,
