@@ -17,6 +17,8 @@ export function isRtlLanguage(code: string): boolean {
 	return RTL_LANGUAGES.has(code.split("-")[0].toLowerCase());
 }
 
+const MIN_TRANSLATION_COVERAGE = 0.8;
+
 const TRANSLATION_SCHEMA = {
 	type: "object",
 	properties: {
@@ -58,49 +60,11 @@ export const TRANSLATION_TARGETS = [
 ] as const;
 
 /**
- * Minimal word-level dictionary for tier-0 heuristic translation.
- * Only covers the top ~80 English words → Spanish. Enough to provide
- * a partial translation rather than nothing.
- */
-const HEURISTIC_DICT_ES: Record<string, string> = {
-	the: "el", a: "un", is: "es", are: "son", was: "fue", were: "eran",
-	and: "y", or: "o", but: "pero", not: "no", this: "esto", that: "eso",
-	it: "ello", in: "en", on: "en", at: "a", to: "a", for: "para",
-	of: "de", with: "con", from: "de", by: "por", as: "como", be: "ser",
-	have: "tener", do: "hacer", will: "va", would: "haría", can: "puede",
-	should: "debería", i: "yo", you: "tú", he: "él", she: "ella", we: "nosotros",
-	they: "ellos", my: "mi", your: "tu", his: "su", her: "su", our: "nuestro",
-	their: "su", here: "aquí", there: "allí", now: "ahora", then: "entonces",
-	yes: "sí", no: "no", so: "así", if: "si", all: "todo", more: "más",
-	some: "algunos", how: "cómo", what: "qué", when: "cuándo", where: "dónde",
-	who: "quién", which: "cuál", why: "por qué", very: "muy", also: "también",
-	just: "solo", about: "sobre", like: "como", go: "ir", see: "ver",
-	know: "saber", get: "obtener", make: "hacer", say: "decir", take: "tomar",
-	come: "venir", think: "pensar", look: "mirar", want: "querer", give: "dar",
-	use: "usar", find: "encontrar", tell: "decir", work: "trabajar", call: "llamar",
-	try: "intentar", ask: "preguntar", need: "necesitar", feel: "sentir", become: "convertirse",
-	leave: "salir", put: "poner", mean: "significar", keep: "mantener", let: "dejar",
-	begin: "empezar", show: "mostrar", hear: "oír", play: "jugar", run: "correr",
-	move: "mover", live: "vivir", believe: "creer", hold: "sostener", bring: "traer",
-	happen: "suceder", write: "escribir", provide: "proporcionar", sit: "sentarse", stand: "pararse",
-	today: "hoy", click: "clic", screen: "pantalla", video: "video", button: "botón",
-};
-
-function heuristicTranslateWord(word: string): string {
-	const lower = word.toLowerCase().replace(/[.,!?;:'"()]/g, "");
-	const translated = HEURISTIC_DICT_ES[lower];
-	if (!translated) return word; // leave untranslated
-	// Preserve original casing
-	if (word[0] === word[0].toUpperCase()) {
-		return translated.charAt(0).toUpperCase() + translated.slice(1);
-	}
-	return translated;
-}
-
-/**
  * Translate captions to a target language.
- * Tier 2: Uses local Gemma 4 model for real translation.
- * Tier 0: Falls back to word-by-word dictionary lookup (Spanish only).
+ * Uses the local Gemma model only. There is deliberately NO heuristic fallback:
+ * a word-by-word dictionary swap is not a translation, so without the model the
+ * feature reports "unavailable" instead of producing broken text.
+ * Model output is validated against the real cue ids before it is trusted.
  */
 export async function translateCaptionsWithAi(
 	cues: CaptionCue[],
@@ -123,34 +87,33 @@ export async function translateCaptionsWithAi(
 	});
 
 	if (result.ok) {
+		const known = new Map(cues.map((cue) => [cue.id, cue.text]));
+		const translated = new Map<string, string>();
+		for (const item of result.data.translations) {
+			const text = item.text.trim();
+			if (known.has(item.id) && text.length > 0 && text.length <= known.get(item.id)!.length * 6 + 40) {
+				translated.set(item.id, text);
+			}
+		}
+		if (translated.size < Math.ceil(cues.length * MIN_TRANSLATION_COVERAGE)) {
+			return {
+				status: "unavailable",
+				reason: "The local model returned an incomplete or invalid translation. Try again.",
+			};
+		}
 		return {
 			status: "ok",
 			result: {
 				tier: "tier-2-multimodal-local",
 				confidence: 0.75,
 				data: {
-					translatedCues: result.data.translations,
+					// Cues the model skipped keep their original text so applying never drops captions.
+					translatedCues: cues.map((cue) => ({
+						id: cue.id,
+						text: translated.get(cue.id) ?? cue.text,
+					})),
 					targetLanguage,
 				},
-			},
-		};
-	}
-
-	// Tier-0 heuristic: word-by-word dictionary (Spanish only)
-	if (targetLanguage === "es") {
-		const translatedCues = cues.map((cue) => ({
-			id: cue.id,
-			text: cue.text
-				.split(/\s+/)
-				.map(heuristicTranslateWord)
-				.join(" "),
-		}));
-		return {
-			status: "ok",
-			result: {
-				tier: "tier-0-heuristic",
-				confidence: 0.2,
-				data: { translatedCues, targetLanguage },
 			},
 		};
 	}

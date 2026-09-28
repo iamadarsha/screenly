@@ -48,15 +48,25 @@ function isValidSocialResult(data: unknown): data is SocialResult {
 	);
 }
 
+export function sanitizeTags(tags: unknown[]): string[] {
+	const seen = new Set<string>();
+	for (const raw of tags) {
+		if (typeof raw !== "string") continue;
+		const tag = raw.trim().replace(/^#+/, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+		if (tag.length >= 2 && tag.length <= 30) seen.add(tag);
+		if (seen.size >= 8) break;
+	}
+	return [...seen];
+}
+
 /**
- * Heuristic-only publishing metadata from transcript words.
- * No AI needed — extracts the most frequent non-stopword tokens as tags,
- * uses the first sentence as a title, first paragraph as summary, etc.
+ * Heuristic-only publishing metadata from transcript words: tags from word
+ * frequency and the opening words as a title proxy. Summary and social copy are
+ * intentionally left empty (they require the local model).
  */
 function heuristicPublishingPack(_cues: CaptionCue[], transcript: string, chapters: ChapterMarker[]): PublishingPack {
 	const sentences = transcript.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
 	const title = (sentences[0] ?? "Untitled recording").split(/\s+/).slice(0, 10).join(" ");
-	const summary = sentences.slice(0, 3).join(". ") + ".";
 
 	// Extract tags from word frequency (skip common stop words)
 	const stopWords = new Set([
@@ -84,11 +94,9 @@ function heuristicPublishingPack(_cues: CaptionCue[], transcript: string, chapte
 		.slice(0, 8)
 		.map(([word]) => word);
 
-	const maxChars = 280;
-	const twitter = `📺 ${title}${tags.length > 0 ? `\n\n${tags.slice(0, 4).map((t) => `#${t}`).join(" ")}` : ""}`.slice(0, maxChars);
-	const linkedin = `🎬 Check out my latest screen recording!\n\n${summary}\n\n${tags.slice(0, 5).map((t) => `#${t}`).join(" ")}`;
-
-	return { title, summary, tags, chapters, socialCopy: { twitter, linkedin } };
+	// Summary and social copy need real language understanding; without the model they stay empty
+	// rather than presenting truncated transcript text as a summary.
+	return { title, summary: "", tags, chapters, socialCopy: { twitter: "", linkedin: "" } };
 }
 
 /**
@@ -96,7 +104,7 @@ function heuristicPublishingPack(_cues: CaptionCue[], transcript: string, chapte
  * social media copy.
  *
  * Tier 2: Uses Gemma 4 for content-aware title/summary/tags/social copy.
- * Tier 0: Falls back to heuristic word-frequency analysis.
+ * Tier 0: title proxy + word-frequency tags + chapters only (no summary/social copy).
  */
 export async function generatePublishingPackWithAi(
 	cues: CaptionCue[],
@@ -134,13 +142,13 @@ ${transcript.slice(0, 2000)}`,
 				tier: "tier-2-multimodal-local",
 				confidence: 0.7,
 				data: {
-					title: result.data.title,
-					summary: result.data.summary,
-					tags: result.data.tags,
+					title: result.data.title.trim().slice(0, 100),
+					summary: result.data.summary.trim(),
+					tags: sanitizeTags(result.data.tags),
 					chapters,
 					socialCopy: {
-						twitter: result.data.twitter,
-						linkedin: result.data.linkedin,
+						twitter: result.data.twitter.trim().slice(0, 280),
+						linkedin: result.data.linkedin.trim(),
 					},
 				},
 			},

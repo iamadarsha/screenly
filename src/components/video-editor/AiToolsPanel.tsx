@@ -345,14 +345,29 @@ export function AiToolsPanel({ cues, onApplyTranslation }: AiToolsPanelProps) {
 								))}
 							</div>
 						</div>
-						<div>
-							<strong className="block text-[10px] uppercase tracking-wider">Twitter</strong>
-							<p className="whitespace-pre-wrap">{pack.data.socialCopy.twitter}</p>
-						</div>
-						<div>
-							<strong className="block text-[10px] uppercase tracking-wider">LinkedIn</strong>
-							<p className="whitespace-pre-wrap">{pack.data.socialCopy.linkedin}</p>
-						</div>
+						{pack.data.summary ? (
+							<div>
+								<strong className="block text-[10px] uppercase tracking-wider">Summary</strong>
+								<p className="whitespace-pre-wrap">{pack.data.summary}</p>
+							</div>
+						) : null}
+						{pack.data.socialCopy.twitter ? (
+							<div>
+								<strong className="block text-[10px] uppercase tracking-wider">Twitter</strong>
+								<p className="whitespace-pre-wrap">{pack.data.socialCopy.twitter}</p>
+							</div>
+						) : null}
+						{pack.data.socialCopy.linkedin ? (
+							<div>
+								<strong className="block text-[10px] uppercase tracking-wider">LinkedIn</strong>
+								<p className="whitespace-pre-wrap">{pack.data.socialCopy.linkedin}</p>
+							</div>
+						) : null}
+						{!pack.data.summary && !pack.data.socialCopy.twitter ? (
+							<p className="text-[11px] text-muted-foreground/70">
+								Summary and social copy need the local AI model.
+							</p>
+						) : null}
 					</div>
 				)}
 				{pack.phase === "unavailable" && (
