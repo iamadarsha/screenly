@@ -1,3 +1,4 @@
+import { resolveKeystrokeCombo } from "./keystrokeCombo";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -329,24 +330,9 @@ export async function startInteractionCapture(captureKeystrokes = false) {
 				activeKeys.delete(name);
 			}
 
-			const isModifierHeld = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-			const isSafeKey =
-				name.startsWith("F") ||
-				name.startsWith("Arrow") ||
-				name.startsWith("Page") ||
-				["Escape", "Enter", "Tab", "Home", "End", "Backspace", "Delete", "Insert", "Space"].includes(name);
-
-			if (type === "down" && (isModifierHeld || isSafeKey)) {
-				const keys = [];
-				if (event.metaKey) keys.push("Cmd");
-				if (event.ctrlKey) keys.push("Ctrl");
-				if (event.altKey) keys.push("Alt");
-				if (event.shiftKey) keys.push("Shift");
-				if (!["Alt", "Ctrl", "Cmd", "Shift", "Meta", "Right Alt", "Right Ctrl", "Right Shift", "Right Meta"].includes(name)) {
-					keys.push(name);
-				}
-				
-				if (keys.length > 0) {
+			if (type === "down") {
+				const keys = resolveKeystrokeCombo(name, event);
+				if (keys) {
 					recordKeystroke(keys);
 				}
 			}
