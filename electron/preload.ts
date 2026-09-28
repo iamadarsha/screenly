@@ -708,6 +708,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	openAccessibilityPreferences: () => {
 		return ipcRenderer.invoke("open-accessibility-preferences");
 	},
+	getCameraPermissionStatus: () => {
+		return ipcRenderer.invoke("get-camera-permission-status");
+	},
+	requestCameraPermission: () => {
+		return ipcRenderer.invoke("request-camera-permission");
+	},
+	openCameraPreferences: () => {
+		return ipcRenderer.invoke("open-camera-preferences");
+	},
 	saveExportedVideo: (
 		videoData: ArrayBuffer,
 		fileName: string,

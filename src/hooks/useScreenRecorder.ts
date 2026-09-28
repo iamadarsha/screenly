@@ -135,7 +135,7 @@ type UseScreenRecorderReturn = {
 	pauseRecording: () => void;
 	resumeRecording: () => void;
 	cancelRecording: () => void;
-	preparePermissions: (options?: { startup?: boolean }) => Promise<boolean>;
+	preparePermissions: (options?: { startup?: boolean; checkCamera?: boolean }) => Promise<boolean>;
 	isMacOS: boolean;
 	microphoneEnabled: boolean;
 	setMicrophoneEnabled: (enabled: boolean) => void;
@@ -373,7 +373,38 @@ async function createAudioInputDeviceSnapshot(): Promise<
 	return audioInputs.length > 0 ? audioInputs : null;
 }
 
-export function useScreenRecorder(): UseScreenRecorderReturn {
+export type UseScreenRecorderOptions = {
+	getWebcamStream?: () => MediaStream | null;
+};
+
+async function acquireWebcamStream(deviceId?: string): Promise<MediaStream> {
+	if (deviceId && deviceId !== "default") {
+		try {
+			return await navigator.mediaDevices.getUserMedia({
+				video: {
+					deviceId: { ideal: deviceId },
+					width: { ideal: WEBCAM_WIDTH },
+					height: { ideal: WEBCAM_HEIGHT },
+					frameRate: { ideal: WEBCAM_FRAME_RATE, max: WEBCAM_FRAME_RATE },
+				},
+				audio: false,
+			});
+		} catch (err) {
+			console.warn("Failed to acquire webcam with ideal deviceId, falling back to generic video:", err);
+		}
+	}
+
+	return await navigator.mediaDevices.getUserMedia({
+		video: {
+			width: { ideal: WEBCAM_WIDTH },
+			height: { ideal: WEBCAM_HEIGHT },
+			frameRate: { ideal: WEBCAM_FRAME_RATE, max: WEBCAM_FRAME_RATE },
+		},
+		audio: false,
+	});
+}
+
+export function useScreenRecorder(options?: UseScreenRecorderOptions): UseScreenRecorderReturn {
 	const [recording, setRecording] = useState(false);
 	const [paused, setPaused] = useState(false);
 	const [starting, setStarting] = useState(false);
@@ -392,6 +423,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	const screenStream = useRef<MediaStream | null>(null);
 	const microphoneStream = useRef<MediaStream | null>(null);
 	const webcamStream = useRef<MediaStream | null>(null);
+	const isSharedWebcamStream = useRef(false);
 	const recordingActiveRef = useRef(false);
 	const mixingContext = useRef<AudioContext | null>(null);
 	const chunks = useRef<Blob[]>([]);
@@ -547,46 +579,65 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		micFallbackPauseIntervals.current = [];
 	}, []);
 
-	const preparePermissions = useCallback(async (options: { startup?: boolean } = {}) => {
-		const platform = await window.electronAPI.getPlatform();
-		if (platform !== "darwin") {
-			return true;
-		}
+	const preparePermissions = useCallback(
+		async (options: { startup?: boolean; checkCamera?: boolean } = {}) => {
+			const platform = await window.electronAPI.getPlatform();
+			if (platform !== "darwin") {
+				return true;
+			}
 
-		const screenPermission = await window.electronAPI.getScreenRecordingPermissionStatus();
-		if (!screenPermission.success || screenPermission.status !== "granted") {
-			await window.electronAPI.openScreenRecordingPreferences();
+			const screenPermission = await window.electronAPI.getScreenRecordingPermissionStatus();
+			if (!screenPermission.success || screenPermission.status !== "granted") {
+				await window.electronAPI.openScreenRecordingPreferences();
+				alert(
+					options.startup
+						? "Screenly needs Screen Recording permission before you start. System Settings has been opened. After enabling it, quit and reopen Screenly."
+						: "Screen Recording permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Screenly before recording.",
+				);
+				return false;
+			}
+
+			const accessibilityPermission =
+				await window.electronAPI.getAccessibilityPermissionStatus();
+			if (!accessibilityPermission.success) {
+				return false;
+			}
+
+			if (accessibilityPermission.trusted) {
+				return true;
+			}
+
+			const requestedAccessibility =
+				await window.electronAPI.requestAccessibilityPermission();
+			if (requestedAccessibility.success && requestedAccessibility.trusted) {
+				return true;
+			}
+
+			await window.electronAPI.openAccessibilityPreferences();
 			alert(
 				options.startup
-					? "Screenly needs Screen Recording permission before you start. System Settings has been opened. After enabling it, quit and reopen Screenly."
-					: "Screen Recording permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Screenly before recording.",
+					? "Screenly also needs Accessibility permission for cursor tracking. System Settings has been opened. After enabling it, quit and reopen Screenly."
+					: "Accessibility permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Screenly before recording.",
 			);
+
+			if (options.checkCamera && window.electronAPI?.getCameraPermissionStatus) {
+				const cameraStatus = await window.electronAPI.getCameraPermissionStatus();
+				if (cameraStatus.success && cameraStatus.status !== "granted") {
+					const requested = await window.electronAPI.requestCameraPermission?.();
+					if (!requested?.granted) {
+						await window.electronAPI.openCameraPreferences?.();
+						alert(
+							"Screenly needs Camera permission to record your webcam. System Settings has been opened. Please enable Camera access for Screenly.",
+						);
+						return false;
+					}
+				}
+			}
+
 			return false;
-		}
-
-		const accessibilityPermission = await window.electronAPI.getAccessibilityPermissionStatus();
-		if (!accessibilityPermission.success) {
-			return false;
-		}
-
-		if (accessibilityPermission.trusted) {
-			return true;
-		}
-
-		const requestedAccessibility = await window.electronAPI.requestAccessibilityPermission();
-		if (requestedAccessibility.success && requestedAccessibility.trusted) {
-			return true;
-		}
-
-		await window.electronAPI.openAccessibilityPreferences();
-		alert(
-			options.startup
-				? "Screenly also needs Accessibility permission for cursor tracking. System Settings has been opened. After enabling it, quit and reopen Screenly."
-				: "Accessibility permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Screenly before recording.",
-		);
-
-		return false;
-	}, []);
+		},
+		[],
+	);
 
 	const selectMimeType = useCallback(() => {
 		return selectRecordingMimeType();
@@ -1017,6 +1068,11 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		],
 	);
 
+	const persistWebcamEnabled = useCallback((enabled: boolean) => {
+		setWebcamEnabled(enabled);
+		void window.electronAPI.setRecordingPreferences({ webcamEnabled: enabled });
+	}, []);
+
 	/**
 	 * Acquire the webcam stream and prepare the MediaRecorder, but do NOT start
 	 * recording yet. Call {@link beginWebcamCapture} after the main recording
@@ -1032,21 +1088,24 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		}
 
 		try {
-			webcamStream.current = await navigator.mediaDevices.getUserMedia({
-				video: webcamDeviceId
-					? {
-							deviceId: { exact: webcamDeviceId },
-							width: { ideal: WEBCAM_WIDTH },
-							height: { ideal: WEBCAM_HEIGHT },
-							frameRate: { ideal: WEBCAM_FRAME_RATE, max: WEBCAM_FRAME_RATE },
-						}
-					: {
-							width: { ideal: WEBCAM_WIDTH },
-							height: { ideal: WEBCAM_HEIGHT },
-							frameRate: { ideal: WEBCAM_FRAME_RATE, max: WEBCAM_FRAME_RATE },
-						},
-				audio: false,
-			});
+			const existingStream = options?.getWebcamStream?.();
+			const hasLiveTrack = existingStream?.getVideoTracks().some(
+				(t) => t.readyState === "live" && t.enabled,
+			);
+
+			if (existingStream && hasLiveTrack) {
+				try {
+					webcamStream.current = existingStream.clone();
+					isSharedWebcamStream.current = false;
+				} catch {
+					webcamStream.current = existingStream;
+					isSharedWebcamStream.current = true;
+				}
+			} else {
+				webcamStream.current = await acquireWebcamStream(webcamDeviceId);
+				isSharedWebcamStream.current = false;
+			}
+
 			for (const track of webcamStream.current.getVideoTracks()) {
 				track.addEventListener("ended", () => {
 					if (recordingActiveRef.current) {
@@ -1117,7 +1176,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 					webcamRecorder.current = null;
 					webcamStartTime.current = null;
 					if (webcamStream.current) {
-						webcamStream.current.getTracks().forEach((track) => track.stop());
+						if (!isSharedWebcamStream.current) {
+							webcamStream.current.getTracks().forEach((track) => track.stop());
+						}
 						webcamStream.current = null;
 					}
 				}
@@ -1127,6 +1188,8 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 				"Failed to start webcam recording; continuing without webcam layer:",
 				error,
 			);
+			toast.warning("Webcam could not be recorded. Continuing with screen-only recording.");
+			persistWebcamEnabled(false);
 			resolvedWebcamPath.current = null;
 			pendingWebcamPathPromise.current = Promise.resolve(null);
 			webcamStopPromise.current = Promise.resolve(null);
@@ -1134,11 +1197,13 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			webcamStartTime.current = null;
 			webcamTimeOffsetMs.current = 0;
 			if (webcamStream.current) {
-				webcamStream.current.getTracks().forEach((track) => track.stop());
+				if (!isSharedWebcamStream.current) {
+					webcamStream.current.getTracks().forEach((track) => track.stop());
+				}
 				webcamStream.current = null;
 			}
 		}
-	}, [getRecordingDurationMs, selectWebcamMimeType, webcamDeviceId, webcamEnabled]);
+	}, [getRecordingDurationMs, options, persistWebcamEnabled, selectWebcamMimeType, webcamDeviceId, webcamEnabled]);
 
 	/** Start the prepared webcam MediaRecorder. Call after main recording begins. */
 	const beginWebcamCapture = useCallback(() => {
@@ -1168,7 +1233,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			}
 		}
 
-		const permissionsReady = await preparePermissions();
+		const permissionsReady = await preparePermissions({ checkCamera: webcamEnabled });
 		if (!permissionsReady) {
 			return null;
 		}
@@ -1248,6 +1313,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		preparePermissions,
 		prepareWebcamRecorder,
 		resetRecordingClock,
+		webcamEnabled,
 	]);
 
 	const discardActiveNativeCapture = useCallback(async () => {
@@ -1590,11 +1656,6 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		void window.electronAPI.setRecordingPreferences({ systemAudioEnabled: enabled });
 	}, []);
 
-	const persistWebcamEnabled = useCallback((enabled: boolean) => {
-		setWebcamEnabled(enabled);
-		void window.electronAPI.setRecordingPreferences({ webcamEnabled: enabled });
-	}, []);
-
 	const persistWebcamDeviceId = useCallback((deviceId: string | undefined) => {
 		setWebcamDeviceId(deviceId);
 		void window.electronAPI.setRecordingPreferences({ webcamDeviceId: deviceId });
@@ -1835,6 +1896,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 						capturesMicrophone: microphoneEnabled,
 						microphoneDeviceId,
 						microphoneLabel: micLabel,
+						capturesWebcam: webcamEnabled,
 					},
 				);
 				if (nativeResult.success && startWasCancelled()) {

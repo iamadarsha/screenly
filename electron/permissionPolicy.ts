@@ -120,7 +120,11 @@ export function shouldGrantMediaPermission(
 	trustedDocumentBaseUrls: readonly string[],
 ): boolean {
 	if (
-		request.permission !== "media" ||
+		!(
+			request.permission === "media" ||
+			request.permission === "camera" ||
+			request.permission === "microphone"
+		) ||
 		!request.isTrustedCaptureWindow ||
 		!request.isMainFrame ||
 		!isTrustedCaptureDocumentUrl(request.currentDocumentUrl, trustedDocumentBaseUrls)

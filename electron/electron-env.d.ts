@@ -260,6 +260,7 @@ interface Window {
 				capturesMicrophone?: boolean;
 				microphoneDeviceId?: string;
 				microphoneLabel?: string;
+				capturesWebcam?: boolean;
 			},
 		) => Promise<{
 			success: boolean;
@@ -669,6 +670,17 @@ interface Window {
 		}>;
 		openScreenRecordingPreferences: () => Promise<{ success: boolean; error?: string }>;
 		openAccessibilityPreferences: () => Promise<{ success: boolean; error?: string }>;
+		getCameraPermissionStatus: () => Promise<{
+			success: boolean;
+			status: string;
+			error?: string;
+		}>;
+		requestCameraPermission: () => Promise<{
+			success: boolean;
+			granted: boolean;
+			error?: string;
+		}>;
+		openCameraPreferences: () => Promise<{ success: boolean; error?: string }>;
 		saveExportedVideo: (
 			videoData: ArrayBuffer,
 			fileName: string,

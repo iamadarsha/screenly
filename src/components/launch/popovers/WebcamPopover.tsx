@@ -26,6 +26,8 @@ export function WebcamPopover({
 	webcamDeviceId,
 	selectedVideoDeviceId,
 	onSelectVideoDevice,
+	cameraError,
+	onRetryPreview,
 }: {
 	trigger: ReactElement;
 	disabled?: boolean;
@@ -40,6 +42,8 @@ export function WebcamPopover({
 	webcamDeviceId?: string;
 	selectedVideoDeviceId?: string;
 	onSelectVideoDevice: (deviceId: string) => void;
+	cameraError?: string | null;
+	onRetryPreview?: () => void;
 }) {
 	const t = useScopedT("launch");
 	const { isOpen, requestOpen, requestClose } = useLaunchPopoverCoordinator();
@@ -95,14 +99,38 @@ export function WebcamPopover({
 					{t("recording.selectWebcamToEnable")}
 				</div>
 			)}
+			{cameraError && (
+				<div className="mx-3 my-2 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive flex flex-col gap-1.5">
+					<div className="flex items-center gap-1.5 font-medium">
+						<span>⚠️</span>
+						<span>Webcam Preview Issue</span>
+					</div>
+					<div className="text-[11px] leading-tight opacity-90">{cameraError}</div>
+					{onRetryPreview && (
+						<button
+							type="button"
+							onClick={onRetryPreview}
+							className="mt-1 px-2 py-0.5 rounded bg-destructive/20 hover:bg-destructive/30 text-[11px] font-medium text-foreground self-start transition-colors"
+						>
+							Retry Camera
+						</button>
+					)}
+				</div>
+			)}
 			{showWebcamControls && (
 				<div className="flex justify-center px-3 py-2">
 					<div className="h-24 w-24 overflow-hidden rounded-2xl bg-[var(--launch-hover)] ring-1 ring-[var(--launch-border-strong)]">
 						<video
 							ref={setWebcamPreviewNode}
 							className="h-full w-full object-cover"
+							autoPlay
 							muted
 							playsInline
+							onLoadedMetadata={(e) => {
+								void e.currentTarget.play().catch(() => {
+									/* Autoplay policy / interruption ignored */
+								});
+							}}
 							style={{ transform: "scaleX(-1)" }}
 						/>
 					</div>

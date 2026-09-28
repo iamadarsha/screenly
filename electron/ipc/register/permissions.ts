@@ -84,4 +84,52 @@ export function registerPermissionHandlers() {
 			return { success: false, error: String(error) };
 		}
 	});
+
+	ipcMain.handle("get-camera-permission-status", () => {
+		if (process.platform !== "darwin") {
+			return { success: true, status: "granted" };
+		}
+
+		try {
+			return {
+				success: true,
+				status: systemPreferences.getMediaAccessStatus("camera"),
+			};
+		} catch (error) {
+			console.error("Failed to get camera permission status:", error);
+			return { success: false, status: "unknown", error: String(error) };
+		}
+	});
+
+	ipcMain.handle("request-camera-permission", async () => {
+		if (process.platform !== "darwin") {
+			return { success: true, granted: true };
+		}
+
+		try {
+			const currentStatus = systemPreferences.getMediaAccessStatus("camera");
+			if (currentStatus === "granted") {
+				return { success: true, granted: true };
+			}
+			const granted = await systemPreferences.askForMediaAccess("camera");
+			return { success: true, granted };
+		} catch (error) {
+			console.error("Failed to request camera permission:", error);
+			return { success: false, granted: false, error: String(error) };
+		}
+	});
+
+	ipcMain.handle("open-camera-preferences", async () => {
+		if (process.platform !== "darwin") {
+			return { success: true };
+		}
+
+		try {
+			await shell.openExternal(getMacPrivacySettingsUrl("camera"));
+			return { success: true };
+		} catch (error) {
+			console.error("Failed to open Camera preferences:", error);
+			return { success: false, error: String(error) };
+		}
+	});
 }

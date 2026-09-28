@@ -813,6 +813,15 @@ export function registerRecordingHandlers(
 					}
 				}
 
+				// Ensure camera TCC is granted for this process tree when webcam capture
+				// is requested.
+				if (options?.capturesWebcam) {
+					const cameraStatus = systemPreferences.getMediaAccessStatus("camera");
+					if (cameraStatus !== "granted") {
+						await systemPreferences.askForMediaAccess("camera");
+					}
+				}
+
 				const appName = normalizeDesktopSourceName(String(source?.appName ?? ""));
 				const ownAppName = normalizeDesktopSourceName(app.getName());
 				if (

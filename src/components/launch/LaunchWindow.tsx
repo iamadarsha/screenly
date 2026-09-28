@@ -52,6 +52,8 @@ function LaunchWindowContent() {
 	const t = useScopedT("launch");
 	const { openId, requestOpen } = useLaunchPopoverCoordinator();
 
+	const previewStreamGetterRef = useRef<(() => MediaStream | null) | null>(null);
+
 	const {
 		recording,
 		paused,
@@ -74,7 +76,9 @@ function LaunchWindowContent() {
 		countdownDelay,
 		setCountdownDelay,
 		preparePermissions,
-	} = useScreenRecorder();
+	} = useScreenRecorder({
+		getWebcamStream: () => previewStreamGetterRef.current?.() ?? null,
+	});
 
 	const { elapsed, formatTime } = useRecordingTimer(recording, paused);
 	const hudContentRef = useRef<HTMLDivElement>(null);
@@ -124,6 +128,9 @@ function LaunchWindowContent() {
 		handleWebcamPreviewPointerUp,
 		setWebcamPreviewNode,
 		setRecordingWebcamPreviewNode,
+		getPreviewStream,
+		cameraError,
+		retryPreview,
 	} = useWebcamPreviewOverlay({
 		webcamEnabled,
 		webcamDeviceId,
@@ -131,6 +138,8 @@ function LaunchWindowContent() {
 		webcamPopoverOpen: openId === "webcam",
 		hudOverlayMousePassthroughSupported,
 	});
+
+	previewStreamGetterRef.current = getPreviewStream;
 
 	useEffect(() => {
 		window.electronAPI?.hudOverlaySetWebcamPreviewVisible?.(showRecordingWebcamPreview);
@@ -312,6 +321,8 @@ function LaunchWindowContent() {
 					setSelectedVideoDeviceId(deviceId);
 					setWebcamDeviceId(deviceId);
 				}}
+				cameraError={cameraError}
+				onRetryPreview={retryPreview}
 				trigger={
 					<Button
 						variant="ghost"
@@ -517,8 +528,14 @@ function LaunchWindowContent() {
 								<video
 									ref={setRecordingWebcamPreviewNode}
 									className={styles.recordingWebcamPreviewVideo}
+									autoPlay
 									muted
 									playsInline
+									onLoadedMetadata={(e) => {
+										void e.currentTarget.play().catch(() => {
+											/* Autoplay policy / interruption ignored */
+										});
+									}}
 									style={{ transform: "scaleX(-1)" }}
 								/>
 							</div>
