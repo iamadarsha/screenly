@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useMemo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { EditorAnnouncementBanner } from "@/components/announcements/EditorAnnouncementBanner";
 import { Toaster } from "@/components/ui/toast";
+import { useTheme } from "@/contexts/ThemeContext";
 import type { useI18n } from "@/contexts/I18nContext";
 import type { useEditorExportController } from "../export/useEditorExportController";
 import type { useExportDimensions } from "../export/useExportDimensions";
@@ -29,7 +30,8 @@ import { EditorDialogs } from "./EditorDialogs";
 import { EditorLoadingSkeleton } from "./EditorLoadingSkeleton";
 import { EditorHeader } from "./EditorHeader";
 import { EditorPreviewPanel } from "./EditorPreviewPanel";
-import { EditorSidebar } from "./EditorSidebar";
+import { EditorRightInspector } from "./EditorRightInspector";
+import { CommandPalette } from "./CommandPalette";
 import { EditorTimelinePanel } from "./EditorTimelinePanel";
 
 type Props = {
@@ -59,6 +61,21 @@ export function EditorShell(props: Props) {
 	const [signInOpen, setSignInOpen] = useState(false);
 	const [signInReason, setSignInReason] = useState<SignInReason>("account");
 	const [shareRequestNonce, setShareRequestNonce] = useState(0);
+	const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+	const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+	const { toggleTheme } = useTheme();
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+				e.preventDefault();
+				setCommandPaletteOpen((prev) => !prev);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, []);
+
 	const auth = useRecordlyAuth();
 	const requestSignIn = (reason: SignInReason) => {
 		if (reason === "share" && auth.user) {
@@ -286,6 +303,9 @@ export function EditorShell(props: Props) {
 				authToken={auth.accessToken}
 				revealExportedFile={dialogActions.revealExportedFile}
 				exportMessage={exportMessage}
+				onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+				inspectorCollapsed={inspectorCollapsed}
+				onToggleInspector={() => setInspectorCollapsed((c) => !c)}
 			/>
 			<EditorAnnouncementBanner />
 			<div
@@ -334,8 +354,42 @@ export function EditorShell(props: Props) {
 						void library.addToTimeline(paths, index);
 				}}
 			>
-				<div className="relative z-10 flex min-h-0 flex-1 pt-3">
-					<EditorSidebar
+				<div className="relative z-10 flex min-h-0 flex-1 px-3 pt-2 gap-3 overflow-hidden">
+					<EditorPreviewPanel
+						t={t}
+						videoPath={project.videoPath}
+						previewVersion={ui.previewVersion}
+						aspectRatio={ui.aspectRatio}
+						setAspectRatio={ui.setAspectRatio}
+						previewAspectRatioValue={previewAspectRatioValue}
+						videoPlaybackRef={ui.videoPlaybackRef}
+						timelineRef={ui.timelineRef}
+						currentTime={ui.currentTime}
+						isPlaying={ui.isPlaying}
+						previewVolume={ui.previewVolume}
+						setPreviewVolume={ui.setPreviewVolume}
+						suspendRendering={exportStatus.shouldSuspendPreviewRendering}
+						appearance={appearance}
+						timeline={timeline}
+						audio={audio}
+						projection={projection}
+						playback={playback}
+						zoomCommands={zoomCommands}
+						annotationCommands={annotationCommands}
+						effectiveCursorTelemetry={cursor.effectiveCursorTelemetry}
+						effectiveShowCursor={effectiveShowCursor}
+						isCropped={ui.isCropped}
+						handleOpenCropEditor={ui.handleOpenCropEditor}
+						handleSaveAutoCaptionEdit={autoCaption.handleSaveAutoCaptionEdit}
+						handleSelectAnnotation={handleSelectAnnotation}
+						setDuration={ui.setDuration}
+						isPreviewReady={ui.isPreviewReady}
+						setIsPreviewReady={ui.setIsPreviewReady}
+						setCurrentTime={ui.setCurrentTime}
+						setIsPlaying={ui.setIsPlaying}
+						setError={handlePreviewError}
+					/>
+					<EditorRightInspector
 						accountUser={auth.user}
 						onAccountClick={() => requestSignIn("account")}
 						panelContent={
@@ -386,40 +440,8 @@ export function EditorShell(props: Props) {
 								? () => retake.switchTake(timeline.selectedClipId as string)
 								: undefined,
 						}}
-					/>
-					<EditorPreviewPanel
-						t={t}
-						videoPath={project.videoPath}
-						previewVersion={ui.previewVersion}
-						aspectRatio={ui.aspectRatio}
-						setAspectRatio={ui.setAspectRatio}
-						previewAspectRatioValue={previewAspectRatioValue}
-						videoPlaybackRef={ui.videoPlaybackRef}
-						timelineRef={ui.timelineRef}
-						currentTime={ui.currentTime}
-						isPlaying={ui.isPlaying}
-						previewVolume={ui.previewVolume}
-						setPreviewVolume={ui.setPreviewVolume}
-						suspendRendering={exportStatus.shouldSuspendPreviewRendering}
-						appearance={appearance}
-						timeline={timeline}
-						audio={audio}
-						projection={projection}
-						playback={playback}
-						zoomCommands={zoomCommands}
-						annotationCommands={annotationCommands}
-						effectiveCursorTelemetry={cursor.effectiveCursorTelemetry}
-						effectiveShowCursor={effectiveShowCursor}
-						isCropped={ui.isCropped}
-						handleOpenCropEditor={ui.handleOpenCropEditor}
-						handleSaveAutoCaptionEdit={autoCaption.handleSaveAutoCaptionEdit}
-						handleSelectAnnotation={handleSelectAnnotation}
-						setDuration={ui.setDuration}
-						isPreviewReady={ui.isPreviewReady}
-						setIsPreviewReady={ui.setIsPreviewReady}
-						setCurrentTime={ui.setCurrentTime}
-						setIsPlaying={ui.setIsPlaying}
-						setError={handlePreviewError}
+						collapsed={inspectorCollapsed}
+						onToggleCollapsed={() => setInspectorCollapsed((c) => !c)}
 					/>
 				</div>
 				<EditorTimelinePanel
@@ -487,6 +509,27 @@ export function EditorShell(props: Props) {
 				aspectRatio={ui.aspectRatio}
 				onCancel={ui.handleCancelCropEditor}
 				onDone={ui.handleCloseCropEditor}
+			/>
+			<CommandPalette
+				open={commandPaletteOpen}
+				onClose={() => setCommandPaletteOpen(false)}
+				onSelectSection={(section) => {
+					setInspectorCollapsed(false);
+					ui.setActiveEffectSection(section);
+				}}
+				onOpenHome={openActions.handleOpenProjectBrowser}
+				onToggleClips={() => library.setOpen((open) => !open)}
+				onOpenExport={dialogActions.handleOpenExportDropdown}
+				onAddZoom={() => {
+					ui.timelineRef.current?.addZoom();
+				}}
+				onSplitClip={() => {
+					ui.timelineRef.current?.splitClip();
+				}}
+				onOpenCrop={ui.handleOpenCropEditor}
+				onUndo={history.canUndo ? history.handleUndo : undefined}
+				onRedo={history.canRedo ? history.handleRedo : undefined}
+				toggleTheme={toggleTheme}
 			/>
 			<Toaster className="pointer-events-auto" />
 		</div>

@@ -2,10 +2,11 @@ import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 import { Separator } from "@heroui/react";
 import {
 	House,
-	FilmStrip,
 	ArrowClockwise as Redo2,
 	ArrowCounterClockwise as Undo2,
+	Sliders,
 } from "@/components/ui/icons";
+import { WorkspaceNav } from "./WorkspaceNav";
 import type { CSSProperties, FormEvent, RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import type { useI18n } from "@/contexts/I18nContext";
@@ -20,6 +21,9 @@ import { EditorPresetMenu } from "./EditorPresetMenu";
 
 // Keep the preset implementation available for future use.
 const SHOW_PRESETS_BUTTON = false;
+const NOOP = () => {
+	// Intentional default fallback
+};
 
 type Props = {
 	clipsOpen: boolean;
@@ -58,6 +62,11 @@ type Props = {
 	onRequestShareSignIn: () => void;
 	shareRequestNonce: number;
 	authToken?: string;
+	onOpenRecord?: () => void;
+	onOpenStudio?: () => void;
+	onOpenCommandPalette?: () => void;
+	inspectorCollapsed?: boolean;
+	onToggleInspector?: () => void;
 };
 
 export function EditorHeader(props: Props) {
@@ -103,11 +112,11 @@ export function EditorHeader(props: Props) {
 
 	return (
 		<header
-			className="editor-header [--text-sm:0.8125rem] relative z-50 grid h-14 shrink-0 border-b border-separator grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4"
+			className="editor-header [--text-sm:0.8125rem] relative z-50 flex h-14 shrink-0 border-b border-white/10 glass-panel items-center justify-between gap-3 px-4"
 			style={{ WebkitAppRegion: "drag" } as CSSProperties}
 		>
 			<div
-				className={`editor-header-start flex min-w-0 items-center gap-1 ${headerLeftControlsPaddingClass}`}
+				className={`editor-header-start flex min-w-0 items-center gap-2 ${headerLeftControlsPaddingClass}`}
 				style={{ WebkitAppRegion: "no-drag" } as CSSProperties}
 			>
 				<Button
@@ -116,16 +125,16 @@ export function EditorHeader(props: Props) {
 					variant="ghost"
 					size="sm"
 					onClick={handleOpenProjectBrowser}
-					className="h-9 shrink-0 gap-2 px-3"
+					className="h-9 shrink-0 gap-2 px-3 text-foreground/80 hover:text-foreground"
 					title="Home"
 					aria-label="Home"
 				>
-					<House weight="fill" className="h-4 w-4" />
-					<span>Home</span>
+					<House weight="fill" className="h-4 w-4 text-screenly-blue" />
+					<span className="font-medium">Screenly</span>
 				</Button>
 				<span
 					aria-hidden="true"
-					className="mx-2 shrink-0 text-xl font-light text-muted-foreground/60"
+					className="mx-1 shrink-0 text-sm font-light text-muted-foreground/40"
 				>
 					/
 				</span>
@@ -140,7 +149,7 @@ export function EditorHeader(props: Props) {
 							className="flex w-full min-w-0 items-center gap-1.5 px-1"
 						>
 							{hasUnsavedChanges ? (
-								<span className="size-1.5 shrink-0 rounded-full bg-accent" />
+								<span className="size-1.5 shrink-0 rounded-full bg-screenly-coral animate-pulse" />
 							) : null}
 							<input
 								ref={projectNameInputRef}
@@ -162,7 +171,7 @@ export function EditorHeader(props: Props) {
 									}
 								}}
 								disabled={isSavingProjectName}
-								className="inline-project-name h-9 min-w-0 max-w-full text-sm font-semibold tracking-tight text-foreground/90 disabled:cursor-wait"
+								className="inline-project-name h-9 min-w-0 max-w-full text-sm font-semibold tracking-tight text-foreground/90 disabled:cursor-wait bg-white/5 px-2 rounded-lg border border-white/10"
 								style={{ width: `${Math.max(12, projectNameDraft.length + 1)}ch` }}
 								aria-label={t("editor.project.renameInput", "Project name")}
 							/>
@@ -172,12 +181,12 @@ export function EditorHeader(props: Props) {
 							variant="ghost"
 							type="button"
 							onClick={() => setIsEditingProjectName(true)}
-							className="inline-flex h-9 min-w-0 max-w-full items-center gap-1.5 px-1"
+							className="inline-flex h-9 min-w-0 max-w-full items-center gap-1.5 px-2 rounded-lg hover:bg-white/5"
 							title={t("editor.project.renameTitle", "Rename project")}
 							aria-label={t("editor.project.renameTitle", "Rename project")}
 						>
 							{hasUnsavedChanges ? (
-								<span className="size-1.5 shrink-0 rounded-full bg-accent" />
+								<span className="size-1.5 shrink-0 rounded-full bg-screenly-coral" />
 							) : null}
 							<span className="truncate text-sm font-semibold tracking-tight text-foreground/90">
 								{projectDisplayName}
@@ -185,31 +194,35 @@ export function EditorHeader(props: Props) {
 						</Button>
 					)}
 				</div>
-				<Separator orientation="vertical" className="mx-3 h-5 shrink-0 self-center" />
-				<Button
-					variant="secondary"
-					size="sm"
-					className="h-9 shrink-0 gap-2"
-					aria-expanded={props.clipsOpen}
-					onClick={props.onToggleClips}
-				>
-					<FilmStrip weight={props.clipsOpen ? "fill" : "regular"} className="size-4" />
-					Clips
-				</Button>
+			</div>
+
+			{/* Center Workspace Switcher */}
+			<div
+				className="flex items-center justify-center shrink-0"
+				style={{ WebkitAppRegion: "no-drag" } as CSSProperties}
+			>
+				<WorkspaceNav
+					onOpenHome={handleOpenProjectBrowser}
+					onOpenRecord={props.onOpenRecord ?? NOOP}
+					onOpenStudio={props.onOpenStudio ?? NOOP}
+					onToggleLibrary={props.onToggleClips}
+					libraryOpen={props.clipsOpen}
+					onOpenPublish={props.handleOpenExportDropdown}
+					onOpenCommandPalette={props.onOpenCommandPalette}
+				/>
 			</div>
 
 			<div
-				className="editor-header-end flex min-w-0 items-center justify-self-end gap-3"
+				className="editor-header-end flex min-w-0 items-center justify-self-end gap-2"
 				style={{ WebkitAppRegion: "no-drag" } as CSSProperties}
 			>
 				<div className="flex items-center gap-1">
-					<Separator orientation="vertical" className="mx-3 h-5 shrink-0 self-center" />
 					<Button
 						type="button"
 						variant="ghost"
 						onClick={handleUndo}
 						disabled={!canUndo}
-						className="inline-flex h-9 w-9 min-w-9 items-center justify-center p-0 disabled:cursor-not-allowed"
+						className="inline-flex h-8 w-8 min-w-8 items-center justify-center p-0 disabled:cursor-not-allowed text-foreground/70 hover:text-foreground"
 						title={t("common.actions.undo", "Undo")}
 						aria-label={t("common.actions.undo", "Undo")}
 					>
@@ -220,13 +233,35 @@ export function EditorHeader(props: Props) {
 						variant="ghost"
 						onClick={handleRedo}
 						disabled={!canRedo}
-						className="inline-flex h-9 w-9 min-w-9 items-center justify-center p-0 disabled:cursor-not-allowed"
+						className="inline-flex h-8 w-8 min-w-8 items-center justify-center p-0 disabled:cursor-not-allowed text-foreground/70 hover:text-foreground"
 						title={t("common.actions.redo", "Redo")}
 						aria-label={t("common.actions.redo", "Redo")}
 					>
 						<Redo2 className="h-4 w-4" />
 					</Button>
 				</div>
+
+				{props.onToggleInspector && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={props.onToggleInspector}
+						className={`h-8 px-2.5 gap-1.5 text-xs rounded-lg transition-colors ${
+							!props.inspectorCollapsed
+								? "bg-screenly-blue/15 text-screenly-blue"
+								: "text-foreground/70 hover:text-foreground"
+						}`}
+						title="Toggle Studio Inspector"
+						aria-label="Toggle Studio Inspector"
+					>
+						<Sliders size={14} />
+						<span className="hidden lg:inline text-[11px] font-medium">Inspector</span>
+					</Button>
+				)}
+
+				<Separator orientation="vertical" className="h-4 shrink-0 self-center opacity-40" />
+
 				{SHOW_PRESETS_BUTTON && <EditorPresetMenu t={t} presets={presets} />}
 				<FeedbackDialog />
 				<EditorExportMenu

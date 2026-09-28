@@ -46,16 +46,45 @@
 	--color-editor-timeline: var(--background);
 	--color-editor-row: var(--surface);
 	--color-editor-subrow: var(--surface-secondary);
+	--color-screenly-blue: #3882F6;
+	--color-screenly-violet: #8B5CF6;
+	--color-screenly-magenta: #EC4899;
+	--color-screenly-coral: #FF686B;
+	--color-screenly-amber: #F59E0B;
+	--color-screenly-navy: #0B1020;
+	--color-screenly-slate: #334155;
+	--color-screenly-light: #F1F5F9;
+	--color-screenly-white: #FFFFFF;
 }
 
 @layer base {
 	:root {
+		--screenly-blue: #3882F6;
+		--screenly-violet: #8B5CF6;
+		--screenly-magenta: #EC4899;
+		--screenly-coral: #FF686B;
+		--screenly-amber: #F59E0B;
+		--screenly-navy: #0B1020;
+		--screenly-slate: #334155;
+		--screenly-gray: #64748B;
+		--screenly-silver: #CBD5E1;
+		--screenly-light: #F1F5F9;
+		--screenly-white: #FFFFFF;
+		--screenly-gradient: linear-gradient(135deg, #3882F6 0%, #8B5CF6 38%, #EC4899 68%, #FF686B 86%, #F59E0B 100%);
+		--screenly-ai-gradient: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+		--radius-xs: 8px;
+		--radius-sm: 12px;
+		--radius-md: 16px;
+		--radius-lg: 24px;
+		--radius-xl: 32px;
+		--ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
 		--app-font-sans:
 			"DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-		--brand-accent: var(--accent);
-		--brand-accent-rgb: 0, 111, 238;
-		--primary: var(--accent);
-		--primary-foreground: var(--accent-foreground);
+		--brand-accent: var(--screenly-blue);
+		--brand-accent-rgb: 56, 130, 246;
+		--primary: var(--screenly-blue);
+		--primary-foreground: #FFFFFF;
 		--muted-foreground: var(--muted);
 		--destructive: var(--danger);
 		--input: var(--field-border);
@@ -212,3 +241,217 @@
 .dark .dashboard-shell > .card { background-color: color-mix(in srgb, var(--background) 92%, var(--foreground) 8%); }
 
 .dashboard-settings .custom-scrollbar { padding-inline: 0; scrollbar-gutter: auto !important; }
+
+/* ==========================================================================
+   SCREENLY Liquid Glass Material System
+   Authoritative spec: SCREENLY_Brand_UI_Guidelines.md & Design Directive
+   ========================================================================== */
+
+/* 1. Glass Surfaces */
+.glass-nav {
+	background: rgba(11, 16, 32, 0.72);
+	backdrop-filter: blur(28px) saturate(190%);
+	-webkit-backdrop-filter: blur(28px) saturate(190%);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+:root:not(.dark) .glass-nav {
+	background: rgba(255, 255, 255, 0.82);
+	backdrop-filter: blur(28px) saturate(190%);
+	-webkit-backdrop-filter: blur(28px) saturate(190%);
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.glass-panel {
+	background: rgba(11, 16, 32, 0.68);
+	backdrop-filter: blur(24px) saturate(180%);
+	-webkit-backdrop-filter: blur(24px) saturate(180%);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+}
+
+:root:not(.dark) .glass-panel {
+	background: rgba(255, 255, 255, 0.78);
+	backdrop-filter: blur(24px) saturate(180%);
+	-webkit-backdrop-filter: blur(24px) saturate(180%);
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: 0 8px 32px 0 rgba(11, 16, 32, 0.06);
+}
+
+.glass-inspector {
+	background: rgba(11, 16, 32, 0.84);
+	backdrop-filter: blur(24px);
+	-webkit-backdrop-filter: blur(24px);
+	border-left: 1px solid rgba(255, 255, 255, 0.09);
+	box-shadow: -8px 0 32px rgba(0, 0, 0, 0.35);
+}
+
+:root:not(.dark) .glass-inspector {
+	background: rgba(255, 255, 255, 0.88);
+	backdrop-filter: blur(24px);
+	-webkit-backdrop-filter: blur(24px);
+	border-left: 1px solid rgba(15, 23, 42, 0.08);
+	box-shadow: -8px 0 32px rgba(15, 23, 42, 0.06);
+}
+
+.glass-card {
+	background: rgba(17, 24, 39, 0.72);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: var(--radius-sm);
+}
+
+:root:not(.dark) .glass-card {
+	background: rgba(248, 250, 252, 0.82);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	border-radius: var(--radius-sm);
+}
+
+.glass-pill {
+	background: rgba(255, 255, 255, 0.07);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 9999px;
+	transition: background 180ms var(--ease-standard), border-color 180ms var(--ease-standard);
+}
+
+.glass-pill:hover {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+:root:not(.dark) .glass-pill {
+	background: rgba(15, 23, 42, 0.05);
+	border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+:root:not(.dark) .glass-pill:hover {
+	background: rgba(15, 23, 42, 0.08);
+	border-color: rgba(15, 23, 42, 0.18);
+}
+
+.glass-button-primary {
+	background: var(--screenly-gradient);
+	color: #ffffff;
+	border: none;
+	box-shadow: 0 4px 16px rgba(56, 130, 246, 0.35);
+	transition: transform 140ms var(--ease-standard), filter 140ms var(--ease-standard);
+}
+
+.glass-button-primary:hover {
+	filter: brightness(1.08);
+	transform: translateY(-1px);
+	box-shadow: 0 6px 20px rgba(56, 130, 246, 0.45);
+}
+
+.glass-button-primary:active {
+	transform: translateY(0);
+	filter: brightness(0.96);
+}
+
+/* 2. Interactive Minimum 32px targets & Focus */
+.interactive-target {
+	min-height: 32px;
+	min-width: 32px;
+}
+
+:focus-visible {
+	outline: 2px solid var(--screenly-blue) !important;
+	outline-offset: 2px !important;
+}
+
+/* 3. Distinct Track Visual Identities */
+.track-video {
+	border-left: 3px solid var(--screenly-blue);
+	background: rgba(56, 130, 246, 0.06);
+}
+
+.track-camera {
+	border-left: 3px solid var(--screenly-coral);
+	background: rgba(255, 104, 107, 0.06);
+}
+
+.track-audio {
+	border-left: 3px solid var(--screenly-amber);
+	background: rgba(245, 158, 11, 0.06);
+}
+
+.track-captions {
+	border-left: 3px solid #10b981;
+	background: rgba(16, 185, 129, 0.06);
+}
+
+.track-zoom {
+	border-left: 3px solid var(--screenly-violet);
+	background: rgba(139, 92, 246, 0.06);
+}
+
+.track-annotation {
+	border-left: 3px solid var(--screenly-magenta);
+	background: rgba(236, 72, 153, 0.06);
+}
+
+.track-voiceover {
+	border-left: 3px solid #06b6d4;
+	background: rgba(6, 182, 212, 0.06);
+}
+
+/* 4. Accessibility Fallbacks */
+@media (prefers-reduced-transparency: reduce) {
+	.glass-nav,
+	.glass-panel,
+	.glass-inspector,
+	.glass-card,
+	.glass-pill {
+		backdrop-filter: none !important;
+		-webkit-backdrop-filter: none !important;
+	}
+	.dark .glass-nav,
+	.dark .glass-panel,
+	.dark .glass-inspector {
+		background: #0b1020 !important;
+		border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	}
+	.dark .glass-card {
+		background: #1e293b !important;
+		border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	}
+	:root:not(.dark) .glass-nav,
+	:root:not(.dark) .glass-panel,
+	:root:not(.dark) .glass-inspector {
+		background: #ffffff !important;
+		border: 1px solid rgba(15, 23, 42, 0.2) !important;
+	}
+	:root:not(.dark) .glass-card {
+		background: #f8fafc !important;
+		border: 1px solid rgba(15, 23, 42, 0.2) !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+@media (prefers-contrast: more) {
+	.glass-nav,
+	.glass-panel,
+	.glass-inspector,
+	.glass-card {
+		border-width: 2px !important;
+		border-color: currentColor !important;
+	}
+}
+

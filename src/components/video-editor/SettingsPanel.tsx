@@ -1251,6 +1251,7 @@ export function SettingsPanel({
 					label: wallpaper?.label ?? `Wallpaper ${index + 1}`,
 					value: wallpaper?.publicPath ?? previewPath,
 					previewUrl: wallpaperPreviewPaths.length ? previewPath : "",
+					category: wallpaper?.category,
 				};
 			});
 
