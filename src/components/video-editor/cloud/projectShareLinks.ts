@@ -1,4 +1,4 @@
-const KEY = "recordly.project-share-links.v1";
+const KEY = "screenly.project-share-links.v1";
 function readLinks(): Record<string, string> {
 	try {
 		const stored = JSON.parse(localStorage.getItem(KEY) || "{}");

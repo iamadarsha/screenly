@@ -33,6 +33,7 @@
 	"effects": {
 		"title": "비디오 효과",
 		"show": "표시",
+		"showKeystrokes": "Show keystrokes",
 		"showCursor": "커서 표시",
 		"loopCursor": "커서 반복",
 		"cursorStyle": "커서 스타일",

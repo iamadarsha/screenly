@@ -1,4 +1,4 @@
-import { recordlyAuth } from "@/lib/auth/recordlyAuth";
+import { screenlyAuth } from "@/lib/auth/screenlyAuth";
 
 export class FeedbackError extends Error {}
 
@@ -31,7 +31,7 @@ export async function submitFeedback(input: {
 	files: File[];
 	logs: string | null;
 }) {
-	const client = recordlyAuth;
+	const client = screenlyAuth;
 	if (!client)
 		throw new FeedbackError("Feedback is unavailable until account services are configured.");
 	const { data, error } = await client.auth.getUser();

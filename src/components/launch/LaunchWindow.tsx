@@ -196,7 +196,7 @@ function LaunchWindowContent() {
 	};
 
 	const openHome = () => {
-		localStorage.setItem("recordly.open-dashboard", String(Date.now()));
+		localStorage.setItem("screenly.open-dashboard", String(Date.now()));
 		void window.electronAPI.showProjectDashboard();
 	};
 	const homeButton = (

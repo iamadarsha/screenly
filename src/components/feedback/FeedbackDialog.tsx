@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Button, Description, Form, Input, Label, TextArea, TextField } from "@heroui/react";
-import { useRecordlyAuth } from "@/components/auth/useRecordlyAuth";
+import { useScreenlyAuth } from "@/components/auth/useScreenlyAuth";
 import {
 	Dialog,
 	DialogContent,
@@ -25,7 +25,7 @@ export function FeedbackDialog({
 	showLabel?: boolean;
 	onSignIn?: () => void;
 }) {
-	const auth = useRecordlyAuth();
+	const auth = useScreenlyAuth();
 	const [open, setOpen] = useState(false);
 	const [subject, setSubject] = useState("");
 	const [message, setMessage] = useState("");

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProjectLibraryEntry } from "../ProjectBrowserDialog";
 
-const HIDDEN_KEY = "recordly.raw-hidden.v1";
+const HIDDEN_KEY = "screenly.raw-hidden.v1";
 function loadHidden(): string[] {
 	try {
 		const value = JSON.parse(localStorage.getItem(HIDDEN_KEY) || "[]");
@@ -12,7 +12,7 @@ function loadHidden(): string[] {
 		return [];
 	}
 }
-const NAMES_KEY = "recordly.raw-names.v1";
+const NAMES_KEY = "screenly.raw-names.v1";
 function loadNames(): Record<string, string> {
 	try {
 		const value = JSON.parse(localStorage.getItem(NAMES_KEY) || "{}");

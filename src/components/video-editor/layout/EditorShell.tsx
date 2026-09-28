@@ -1,7 +1,7 @@
 import { AccountProfileContext } from "@/components/ui/account-avatar";
 import { DashboardSettingsContext } from "../dashboard/DashboardSettings";
-import { RecordlySignInDialog, type SignInReason } from "@/components/auth/RecordlySignInDialog";
-import { useRecordlyAuth } from "@/components/auth/useRecordlyAuth";
+import { ScreenlySignInDialog, type SignInReason } from "@/components/auth/ScreenlySignInDialog";
+import { useScreenlyAuth } from "@/components/auth/useScreenlyAuth";
 import { useVideoSourceRecovery } from "../hooks/useVideoSourceRecovery";
 import { useRecordingLibrary } from "../library/useRecordingLibrary";
 import { useClipRetake } from "../library/useClipRetake";
@@ -76,7 +76,7 @@ export function EditorShell(props: Props) {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
 
-	const auth = useRecordlyAuth();
+	const auth = useScreenlyAuth();
 	const requestSignIn = (reason: SignInReason) => {
 		if (reason === "share" && auth.user) {
 			setShareRequestNonce((value) => value + 1);
@@ -220,7 +220,7 @@ export function EditorShell(props: Props) {
 		return (
 			<>
 				<EditorLoadingSkeleton />
-				<RecordlySignInDialog
+				<ScreenlySignInDialog
 					open={signInOpen}
 					onOpenChange={setSignInOpen}
 					reason={signInReason}
@@ -250,7 +250,7 @@ export function EditorShell(props: Props) {
 						Open Projects
 					</Button>
 				</div>
-				<RecordlySignInDialog
+				<ScreenlySignInDialog
 					open={signInOpen}
 					onOpenChange={setSignInOpen}
 					reason={signInReason}
@@ -491,7 +491,7 @@ export function EditorShell(props: Props) {
 					</div>
 				</div>
 			)}
-			<RecordlySignInDialog
+			<ScreenlySignInDialog
 				open={signInOpen}
 				onOpenChange={setSignInOpen}
 				reason={signInReason}

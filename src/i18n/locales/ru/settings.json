@@ -33,6 +33,7 @@
 	"effects": {
 		"title": "Эффекты",
 		"show": "Показать",
+		"showKeystrokes": "Show keystrokes",
 		"showCursor": "Показать курсор",
 		"loopCursor": "Зациклить курсор",
 		"cursorStyle": "Стиль курсора",

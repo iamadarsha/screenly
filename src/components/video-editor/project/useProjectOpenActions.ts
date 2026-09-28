@@ -198,8 +198,8 @@ export function useProjectOpenActions({
 
 	useEffect(() => {
 		const openRequestedDashboard = () => {
-			if (!localStorage.getItem("recordly.open-dashboard")) return;
-			localStorage.removeItem("recordly.open-dashboard");
+			if (!localStorage.getItem("screenly.open-dashboard")) return;
+			localStorage.removeItem("screenly.open-dashboard");
 			if (!project.projectBrowserOpen) void handleOpenProjectBrowser();
 		};
 		openRequestedDashboard();

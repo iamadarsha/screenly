@@ -23,7 +23,7 @@ it("notifies local account changes and stores only a session marker", async () =
 	expect(hasDemoSession()).toBe(false);
 	setDemoSession(true);
 	expect(hasDemoSession()).toBe(true);
-	expect(sessionStorage.getItem("recordly.demo-session")).toBe("1");
+	expect(sessionStorage.getItem("screenly.demo-session")).toBe("1");
 	setDemoSession(false);
 	expect(hasDemoSession()).toBe(false);
 	expect(listener).toHaveBeenCalledTimes(2);
@@ -34,7 +34,7 @@ it("notifies local account changes and stores only a session marker", async () =
 
 it("cannot enable the local demo account in production", async () => {
 	vi.stubEnv("DEV", false);
-	sessionStorage.setItem("recordly.demo-session", "1");
+	sessionStorage.setItem("screenly.demo-session", "1");
 	const { setDemoSession, hasDemoSession, demoLoginEnabled } = await import("./demoSession");
 	setDemoSession(true);
 	expect(demoLoginEnabled).toBe(false);

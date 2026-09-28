@@ -33,6 +33,7 @@
 	"effects": {
 		"title": "影片效果",
 		"show": "顯示",
+		"showKeystrokes": "Show keystrokes",
 		"showCursor": "顯示游標",
 		"loopCursor": "游標循環",
 		"cursorStyle": "游標樣式",

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 
 type Metadata = { colors: string[] };
-const KEY = "recordly.dashboard-metadata.v1";
+const KEY = "screenly.dashboard-metadata.v1";
 function load(): Metadata {
 	try {
 		const value = JSON.parse(localStorage.getItem(KEY) || "{}");

@@ -23,18 +23,18 @@ afterEach(() => {
 });
 
 it("exchanges a callback once when live and pending delivery overlap", async () => {
-	const { completeAuthCallback } = await import("./recordlyAuth");
-	const url = "recordly://auth/callback?code=one-time-code";
+	const { completeAuthCallback } = await import("./screenlyAuth");
+	const url = "screenly://auth/callback?code=one-time-code";
 	await Promise.all([completeAuthCallback(url), completeAuthCallback(url)]);
 	await completeAuthCallback(url);
 	expect(exchange).toHaveBeenCalledExactlyOnceWith("one-time-code");
 });
 
 it("shows provider errors without attempting a code exchange", async () => {
-	const { completeAuthCallback } = await import("./recordlyAuth");
+	const { completeAuthCallback } = await import("./screenlyAuth");
 	await expect(
 		completeAuthCallback(
-			"recordly://auth/callback?error=denied&error_description=Sign-in+cancelled",
+			"screenly://auth/callback?error=denied&error_description=Sign-in+cancelled",
 		),
 	).rejects.toThrow("Sign-in cancelled");
 	expect(exchange).not.toHaveBeenCalled();
@@ -43,7 +43,7 @@ it("shows provider errors without attempting a code exchange", async () => {
 it("requests Microsoft's email scope and opens its OAuth URL externally", async () => {
 	const openExternalUrl = vi.fn(async () => ({ success: true }));
 	vi.stubGlobal("window", { electronAPI: { openExternalUrl } });
-	const { signInWithSocial } = await import("./recordlyAuth");
+	const { signInWithSocial } = await import("./screenlyAuth");
 	await signInWithSocial("azure");
 	expect(oauth).toHaveBeenCalledWith(
 		expect.objectContaining({

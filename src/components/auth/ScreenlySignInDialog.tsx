@@ -20,8 +20,8 @@ import {
 	sendPasswordReset,
 	signInWithEmail,
 	signInWithSocial,
-	signOutRecordly,
-} from "@/lib/auth/recordlyAuth";
+	signOutScreenly,
+} from "@/lib/auth/screenlyAuth";
 
 const MotionDialog = motion.create(Modal.Dialog);
 
@@ -54,7 +54,7 @@ function friendlyAuthError(
 	return message;
 }
 
-export function RecordlySignInDialog({
+export function ScreenlySignInDialog({
 	variant = "compact",
 	open,
 	onOpenChange,
@@ -208,7 +208,7 @@ export function RecordlySignInDialog({
 										variant="secondary"
 										className="w-full"
 										isDisabled={disabled}
-										onPress={() => void run("signout", signOutRecordly)}
+										onPress={() => void run("signout", signOutScreenly)}
 									>
 										<SignOut className="size-4" />
 										{busy === "signout"

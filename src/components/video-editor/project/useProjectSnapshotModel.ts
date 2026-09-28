@@ -43,7 +43,7 @@ export function useProjectSnapshotModel({
 	const projectDisplayName = useMemo(() => {
 		const fileName = project.currentProjectPath?.split(/[\\/]/).pop() ?? "Untitled Project";
 		return (
-			fileName.replace(/\.(screenly|recordly|openscreen)$/i, "").replace(/\.[^.]+$/, "") ||
+			fileName.replace(/\.(screenly|screenly|openscreen)$/i, "").replace(/\.[^.]+$/, "") ||
 			t("editor.project.untitled", "Untitled Project")
 		);
 	}, [project.currentProjectPath, t]);

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "@/components/ui/toast";
 export const FOLDER_COLORS = ["#929292", "#de85ac", "#d6ad58", "#70ad8a", "#759bd2", "#a68ccc"];
 export type ProjectFolder = { id: string; name: string; color: string; paths: string[] };
-const KEY = "recordly.project-folders.v1";
+const KEY = "screenly.project-folders.v1";
 export function moveProjectFolderReferences(previous: string, next: string) {
 	const folders = JSON.parse(localStorage.getItem(KEY) || "[]") as ProjectFolder[];
 	if (!Array.isArray(folders)) return;
@@ -11,7 +11,7 @@ export function moveProjectFolderReferences(previous: string, next: string) {
 		paths: folder.paths.map((path) => (path === previous ? next : path)),
 	}));
 	localStorage.setItem(KEY, JSON.stringify(updated));
-	window.dispatchEvent(new CustomEvent("recordly-folders-changed", { detail: updated }));
+	window.dispatchEvent(new CustomEvent("screenly-folders-changed", { detail: updated }));
 }
 export function useProjectFolders() {
 	const [folders, setFolders] = useState<ProjectFolder[]>(() => {
@@ -35,14 +35,14 @@ export function useProjectFolders() {
 	useEffect(() => {
 		const refresh = (event: Event) =>
 			setFolders((event as CustomEvent<ProjectFolder[]>).detail);
-		window.addEventListener("recordly-folders-changed", refresh);
-		return () => window.removeEventListener("recordly-folders-changed", refresh);
+		window.addEventListener("screenly-folders-changed", refresh);
+		return () => window.removeEventListener("screenly-folders-changed", refresh);
 	}, []);
 	const save = (next: ProjectFolder[]) => {
 		try {
 			localStorage.setItem(KEY, JSON.stringify(next));
 			setFolders(next);
-			window.dispatchEvent(new CustomEvent("recordly-folders-changed", { detail: next }));
+			window.dispatchEvent(new CustomEvent("screenly-folders-changed", { detail: next }));
 		} catch {
 			toast.error("Could not save folders");
 		}

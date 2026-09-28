@@ -5,11 +5,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 const callbackUrl = import.meta.env.DEV
 	? "http://127.0.0.1:43821/auth/callback"
-	: "recordly://auth/callback";
+	: "screenly://auth/callback";
 
-export const recordlyAuthConfigured = Boolean(supabaseUrl && supabasePublishableKey);
+export const screenlyAuthConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 
-export const recordlyAuth = recordlyAuthConfigured
+export const screenlyAuth = screenlyAuthConfigured
 	? createClient(supabaseUrl!, supabasePublishableKey!, {
 			auth: {
 				flowType: "pkce",
@@ -21,12 +21,12 @@ export const recordlyAuth = recordlyAuthConfigured
 	: null;
 
 function requireAuth() {
-	if (!recordlyAuth) {
+	if (!screenlyAuth) {
 		throw new Error(
 			"Screenly Auth is not configured. Add the Supabase URL and publishable key.",
 		);
 	}
-	return recordlyAuth;
+	return screenlyAuth;
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<User> {
@@ -91,7 +91,7 @@ async function exchangeAuthCallback(url: string): Promise<void> {
 	if (error) throw error;
 }
 
-export async function signOutRecordly(): Promise<void> {
+export async function signOutScreenly(): Promise<void> {
 	if (hasDemoSession()) {
 		setDemoSession(false);
 		return;

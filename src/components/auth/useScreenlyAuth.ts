@@ -3,26 +3,26 @@ import type { User } from "@supabase/supabase-js";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	completeAuthCallback,
-	recordlyAuth,
-	recordlyAuthConfigured,
-} from "@/lib/auth/recordlyAuth";
+	screenlyAuth,
+	screenlyAuthConfigured,
+} from "@/lib/auth/screenlyAuth";
 
-export function useRecordlyAuth() {
+export function useScreenlyAuth() {
 	const demo = useSyncExternalStore(subscribeDemoSession, hasDemoSession, () => false);
 	const [user, setUser] = useState<User | null>(null);
 	const [accessToken, setAccessToken] = useState<string>();
-	const [loading, setLoading] = useState(recordlyAuthConfigured);
+	const [loading, setLoading] = useState(screenlyAuthConfigured);
 	const [callbackError, setCallbackError] = useState<string>();
 	const callbackUrl = useRef<string | undefined>(undefined);
 
 	useEffect(() => {
-		if (!recordlyAuth) {
+		if (!screenlyAuth) {
 			setLoading(false);
 			return;
 		}
 
 		let mounted = true;
-		void recordlyAuth.auth
+		void screenlyAuth.auth
 			.getSession()
 			.then(({ data }) => {
 				if (mounted) {
@@ -37,7 +37,7 @@ export function useRecordlyAuth() {
 					setLoading(false);
 				}
 			});
-		const { data: listener } = recordlyAuth.auth.onAuthStateChange((_event, session) => {
+		const { data: listener } = screenlyAuth.auth.onAuthStateChange((_event, session) => {
 			if (mounted) {
 				setUser(session?.user ?? null);
 				setAccessToken(session?.access_token);
@@ -73,7 +73,7 @@ export function useRecordlyAuth() {
 		user: demo ? demoUser : user,
 		accessToken: demo ? undefined : accessToken,
 		loading,
-		configured: recordlyAuthConfigured,
+		configured: screenlyAuthConfigured,
 		callbackError,
 	};
 }

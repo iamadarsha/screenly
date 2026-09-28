@@ -994,14 +994,14 @@ function resolveNativeProbePath() {
 	const platformArch = process.arch === "arm64" ? "win32-arm64" : "win32-x64";
 	const candidates = [
 		configuredPath,
-		join(scriptDir, "build", "Release", "recordly-nvidia-cuda-compositor.exe"),
+		join(scriptDir, "build", "Release", "screenly-nvidia-cuda-compositor.exe"),
 		join(
 			repoRoot,
 			"electron",
 			"native",
 			"bin",
 			platformArch,
-			"recordly-nvidia-cuda-compositor.exe",
+			"screenly-nvidia-cuda-compositor.exe",
 		),
 		// Backward-compatible legacy helper path while old work dirs are being retired.
 		join(scriptDir, "build", "Release", "recordly-nvdec-nvenc-probe.exe"),

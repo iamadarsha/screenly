@@ -33,6 +33,7 @@
 	"effects": {
 		"title": "Efectos de video",
 		"show": "Mostrar",
+		"showKeystrokes": "Show keystrokes",
 		"showCursor": "Mostrar cursor",
 		"loopCursor": "Cursor en bucle",
 		"cursorStyle": "Estilo del cursor",

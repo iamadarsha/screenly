@@ -90,7 +90,7 @@ export function getBundledWhisperExecutableCandidates(): string[] {
 }
 
 export function getNativeCaptureHelperBinaryPath(): string {
-	return path.join(app.getPath("userData"), "native-tools", "recordly-screencapturekit-helper");
+	return path.join(app.getPath("userData"), "native-tools", "screenly-screencapturekit-helper");
 }
 
 export function getSystemCursorHelperSourcePath(): string {
@@ -248,7 +248,7 @@ export async function ensureNativeCaptureHelperBinary(): Promise<string> {
 		getNativeCaptureHelperSourcePath(),
 		getNativeCaptureHelperBinaryPath(),
 		"native ScreenCaptureKit helper",
-		"recordly-screencapturekit-helper",
+		"screenly-screencapturekit-helper",
 	);
 }
 

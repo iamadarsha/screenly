@@ -2,10 +2,10 @@ import type { User } from "@supabase/supabase-js";
 
 // Temporary local UI account. Never creates a Supabase session or cloud access token.
 export const demoLoginEnabled = import.meta.env.DEV;
-const key = "recordly.demo-session";
-const event = "recordly-demo-session-changed";
+const key = "screenly.demo-session";
+const event = "screenly-demo-session-changed";
 export const demoUser: User = {
-	id: "recordly-local-demo",
+	id: "screenly-local-demo",
 	email: "test@email.com",
 	aud: "local-demo",
 	app_metadata: {},
