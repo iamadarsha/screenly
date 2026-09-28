@@ -37,6 +37,7 @@ type Props = {
 	onRequestShareSignIn: () => void;
 	shareRequestNonce: number;
 	authToken?: string;
+	duration?: number;
 };
 
 export function EditorExportMenu(props: Props) {
@@ -338,6 +339,7 @@ export function EditorExportMenu(props: Props) {
 								onIncludeCaptionSidecarChange={setIncludeCaptionSidecar}
 								mp4OutputDimensions={mp4OutputDimensions}
 								gifOutputDimensions={gifOutputDimensions}
+								duration={props.duration}
 								onExport={handleStartExportFromDropdown}
 								className="rounded-none bg-transparent p-5 shadow-none"
 							/>

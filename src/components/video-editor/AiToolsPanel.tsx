@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { generateChaptersWithAi } from "@/lib/ai/aiChapters";
 import { generateSummaryWithAi } from "@/lib/ai/aiSummary";
 import { generateTitleWithAi } from "@/lib/ai/aiTitle";
+import { translateCaptionsWithAi, TRANSLATION_TARGETS } from "@/lib/ai/aiTranslation";
+import { generatePublishingPackWithAi, type PublishingPack } from "@/lib/ai/aiPublishingPack";
 import { resetLocalModelReadyState } from "@/lib/ai/localModelProvider";
 import type { ChapterMarker } from "@/lib/ai/chapterHeuristics";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProgressBar } from "@heroui/react";
 import type { CaptionCue } from "./types";
 
@@ -57,6 +60,7 @@ function useAiModelStatus() {
 
 interface AiToolsPanelProps {
 	cues: CaptionCue[];
+	onApplyTranslation?: (translated: Array<{id: string; text: string}>) => void;
 }
 
 type FeatureState<T> =
@@ -65,7 +69,7 @@ type FeatureState<T> =
 	| { phase: "done"; tier: string; data: T }
 	| { phase: "unavailable"; reason: string };
 
-export function AiToolsPanel({ cues }: AiToolsPanelProps) {
+export function AiToolsPanel({ cues, onApplyTranslation }: AiToolsPanelProps) {
 	const model = useAiModelStatus();
 	const [chapters, setChapters] = useState<FeatureState<ChapterMarker[]>>({ phase: "idle" });
 	const [title, setTitle] = useState<FeatureState<{ title: string }>>({ phase: "idle" });
@@ -99,6 +103,29 @@ export function AiToolsPanel({ cues }: AiToolsPanelProps) {
 		setSummary(
 			outcome.status === "ok"
 				? { phase: "done", tier: outcome.result.tier, data: outcome.result.data }
+				: { phase: "unavailable", reason: outcome.reason },
+		);
+	};
+
+	const [pack, setPack] = useState<FeatureState<PublishingPack>>({ phase: "idle" });
+	const runPack = async () => {
+		setPack({ phase: "running" });
+		const outcome = await generatePublishingPackWithAi(cues);
+		setPack(
+			outcome.status === "ok"
+				? { phase: "done", tier: outcome.result.tier, data: outcome.result.data }
+				: { phase: "unavailable", reason: outcome.reason },
+		);
+	};
+
+	const [translationLang, setTranslationLang] = useState<string>("es");
+	const [translation, setTranslation] = useState<FeatureState<{ cues: Array<{ id: string; text: string }>; lang: string }>>({ phase: "idle" });
+	const runTranslation = async () => {
+		setTranslation({ phase: "running" });
+		const outcome = await translateCaptionsWithAi(cues, translationLang);
+		setTranslation(
+			outcome.status === "ok"
+				? { phase: "done", tier: outcome.result.tier, data: { cues: outcome.result.data.translatedCues, lang: outcome.result.data.targetLanguage } }
 				: { phase: "unavailable", reason: outcome.reason },
 		);
 	};
@@ -228,6 +255,108 @@ export function AiToolsPanel({ cues }: AiToolsPanelProps) {
 				)}
 				{summary.phase === "unavailable" && (
 					<p className="text-[11px] text-muted-foreground/70">{summary.reason}</p>
+				)}
+			</div>
+
+			<div className="flex flex-col gap-2 border-t border-border/50 pt-2">
+				<div className="flex flex-col gap-2">
+					<div className="flex items-center justify-between gap-2">
+						<span className="text-xs font-medium text-foreground">Translation</span>
+						<Select value={translationLang} onValueChange={setTranslationLang}>
+							<SelectTrigger className="h-7 w-[120px] text-[11px]">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{TRANSLATION_TARGETS.map((t) => (
+									<SelectItem key={t.code} value={t.code} className="text-[11px]">
+										{t.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-7 w-full text-[11px]"
+						disabled={cues.length === 0 || translation.phase === "running"}
+						onClick={runTranslation}
+					>
+						{translation.phase === "running" ? "Translating…" : "Translate Captions"}
+					</Button>
+				</div>
+				{translation.phase === "done" && (
+					<div className="rounded-lg bg-foreground/[0.03] p-2 text-xs text-muted-foreground">
+						<span className="text-[10px] uppercase tracking-wide opacity-60">
+							{translation.tier === "tier-2-multimodal-local" ? "AI Translation" : "Heuristic"} ({translation.data.lang})
+						</span>
+						<div className="mt-1 max-h-32 overflow-y-auto pr-1">
+							{translation.data.cues.slice(0, 3).map((c) => (
+								<p key={c.id} className="mb-1 truncate">{c.text}</p>
+							))}
+							{translation.data.cues.length > 3 && (
+								<p className="text-center text-[10px] italic opacity-60">...and {translation.data.cues.length - 3} more</p>
+							)}
+						</div>
+						{onApplyTranslation && (
+							<Button
+								variant="default"
+								size="sm"
+								className="mt-2 h-7 w-full text-[11px]"
+								onClick={() => onApplyTranslation(translation.data.cues)}
+							>
+								Apply to Timeline
+							</Button>
+						)}
+					</div>
+				)}
+				{translation.phase === "unavailable" && (
+					<p className="text-[11px] text-muted-foreground/70">{translation.reason}</p>
+				)}
+			</div>
+
+			<div className="flex flex-col gap-2 border-t border-border/50 pt-2">
+				<div className="flex items-center justify-between gap-2">
+					<span className="text-xs font-medium text-foreground">Publishing Pack</span>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-7 text-[11px]"
+						disabled={cues.length === 0 || pack.phase === "running"}
+						onClick={runPack}
+					>
+						{pack.phase === "running" ? "Generating…" : "Generate Pack"}
+					</Button>
+				</div>
+				{pack.phase === "done" && (
+					<div className="flex flex-col gap-2 rounded-lg bg-foreground/[0.03] p-2 text-xs text-muted-foreground">
+						<span className="text-[10px] uppercase tracking-wide opacity-60">
+							{pack.tier === "tier-2-multimodal-local" ? "AI Generated" : "Heuristic"}
+						</span>
+						<div>
+							<strong className="block text-[10px] uppercase tracking-wider">Title</strong>
+							{pack.data.title}
+						</div>
+						<div>
+							<strong className="block text-[10px] uppercase tracking-wider">Tags</strong>
+							<div className="flex flex-wrap gap-1">
+								{pack.data.tags.map((tag) => (
+									<span key={tag} className="rounded-sm bg-foreground/5 px-1 py-0.5 text-[10px]">#{tag}</span>
+								))}
+							</div>
+						</div>
+						<div>
+							<strong className="block text-[10px] uppercase tracking-wider">Twitter</strong>
+							<p className="whitespace-pre-wrap">{pack.data.socialCopy.twitter}</p>
+						</div>
+						<div>
+							<strong className="block text-[10px] uppercase tracking-wider">LinkedIn</strong>
+							<p className="whitespace-pre-wrap">{pack.data.socialCopy.linkedin}</p>
+						</div>
+					</div>
+				)}
+				{pack.phase === "unavailable" && (
+					<p className="text-[11px] text-muted-foreground/70">{pack.reason}</p>
 				)}
 			</div>
 		</div>

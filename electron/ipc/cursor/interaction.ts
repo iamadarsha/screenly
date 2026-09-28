@@ -14,6 +14,7 @@ import {
 import type {
 	CursorInteractionType,
 	HookMouseEvent,
+	HookKeyboardEvent,
 	UiohookLike,
 	UiohookModuleNamespace,
 } from "../types";
@@ -23,6 +24,7 @@ import {
 	getNormalizedCursorPoint,
 	isCursorCapturePaused,
 	pushCursorSample,
+	pushKeystrokeSample,
 } from "./telemetry";
 
 const nodeRequire = createRequire(import.meta.url);
@@ -61,35 +63,39 @@ function isUiohookLike(value: unknown): value is UiohookLike {
 	return typeof candidate?.on === "function" && typeof candidate?.start === "function";
 }
 
-function resolveUiohookModule(moduleExports: UiohookModuleNamespace) {
+function resolveUiohookModule(moduleExports: UiohookModuleNamespace): UiohookLike | null {
+	const injectKey = (hook: UiohookLike) => {
+		if (moduleExports.UiohookKey) hook.UiohookKey = moduleExports.UiohookKey;
+		return hook;
+	};
 	const defaultExport = moduleExports.default;
 
 	if (moduleExports.uIOhook) {
-		return moduleExports.uIOhook;
+		return injectKey(moduleExports.uIOhook);
 	}
 
 	if (moduleExports.uiohook) {
-		return moduleExports.uiohook;
+		return injectKey(moduleExports.uiohook);
 	}
 
 	if (moduleExports.Uiohook) {
-		return moduleExports.Uiohook;
+		return injectKey(moduleExports.Uiohook);
 	}
 
 	if (isUiohookLike(defaultExport)) {
-		return defaultExport;
+		return injectKey(defaultExport);
 	}
 
 	if (defaultExport?.uIOhook) {
-		return defaultExport.uIOhook;
+		return injectKey(defaultExport.uIOhook);
 	}
 
 	if (defaultExport?.uiohook) {
-		return defaultExport.uiohook;
+		return injectKey(defaultExport.uiohook);
 	}
 
 	if (defaultExport?.Uiohook) {
-		return defaultExport.Uiohook;
+		return injectKey(defaultExport.Uiohook);
 	}
 
 	return null;
@@ -233,7 +239,23 @@ export function recordCursorMouseUp() {
 	pushCursorSample(point.cx, point.cy, getCursorCaptureElapsedMs(), "mouseup");
 }
 
-export async function startInteractionCapture() {
+let activeKeys = new Set<string>();
+let keycodeToName: Record<number, string> | null = null;
+
+export function recordKeystroke(keys: string[]) {
+	if (!isCursorCaptureActive || isCursorCapturePaused() || keys.length === 0) {
+		return;
+	}
+
+	const point = getNormalizedCursorPoint();
+	if (!point) {
+		return;
+	}
+
+	pushKeystrokeSample(point.cx, point.cy, getCursorCaptureElapsedMs(), keys);
+}
+
+export async function startInteractionCapture(captureKeystrokes = false) {
 	if (!isCursorCaptureActive) {
 		return;
 	}
@@ -242,7 +264,7 @@ export async function startInteractionCapture() {
 		return;
 	}
 
-	if (!shouldStartGlobalInteractionHook()) {
+	if (!captureKeystrokes && !shouldStartGlobalInteractionHook()) {
 		console.warn("[CursorTelemetry] Skipping the blocking global interaction hook on macOS.");
 		return;
 	}
@@ -289,23 +311,80 @@ export async function startInteractionCapture() {
 			setLinuxCursorScreenPoint({ x: point.x, y: point.y, updatedAt: Date.now() });
 		};
 
+		if (captureKeystrokes && hook.UiohookKey && !keycodeToName) {
+			keycodeToName = Object.fromEntries(
+				Object.entries(hook.UiohookKey).map(([name, code]) => [code, name])
+			);
+		}
+
+		const processKeystrokeEvent = (event: HookKeyboardEvent, type: "down" | "up") => {
+			if (!captureKeystrokes || !keycodeToName) return;
+
+			const name = keycodeToName[event.keycode];
+			if (!name) return;
+
+			if (type === "down") {
+				activeKeys.add(name);
+			} else {
+				activeKeys.delete(name);
+			}
+
+			const isModifierHeld = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+			const isSafeKey =
+				name.startsWith("F") ||
+				name.startsWith("Arrow") ||
+				name.startsWith("Page") ||
+				["Escape", "Enter", "Tab", "Home", "End", "Backspace", "Delete", "Insert", "Space"].includes(name);
+
+			if (type === "down" && (isModifierHeld || isSafeKey)) {
+				const keys = [];
+				if (event.metaKey) keys.push("Cmd");
+				if (event.ctrlKey) keys.push("Ctrl");
+				if (event.altKey) keys.push("Alt");
+				if (event.shiftKey) keys.push("Shift");
+				if (!["Alt", "Ctrl", "Cmd", "Shift", "Meta", "Right Alt", "Right Ctrl", "Right Shift", "Right Meta"].includes(name)) {
+					keys.push(name);
+				}
+				
+				if (keys.length > 0) {
+					recordKeystroke(keys);
+				}
+			}
+		};
+
+		const onKeyDown = (event: HookMouseEvent & HookKeyboardEvent) => processKeystrokeEvent(event, "down");
+		const onKeyUp = (event: HookMouseEvent & HookKeyboardEvent) => processKeystrokeEvent(event, "up");
+
 		hook.on("mousedown", onMouseDown);
 		hook.on("mouseup", onMouseUp);
+		if (captureKeystrokes) {
+			hook.on("keydown", onKeyDown);
+			hook.on("keyup", onKeyUp);
+		}
 		if (process.platform === "linux") {
 			hook.on("mousemove", onMouseMove);
 		}
 
 		setInteractionCaptureCleanup(() => {
+			activeKeys.clear();
 			try {
 				if (typeof hook.off === "function") {
 					hook.off("mousedown", onMouseDown);
 					hook.off("mouseup", onMouseUp);
+					if (captureKeystrokes) {
+						hook.off("keydown", onKeyDown);
+						hook.off("keyup", onKeyUp);
+					}
 					if (process.platform === "linux") {
 						hook.off("mousemove", onMouseMove);
 					}
 				} else if (typeof hook.removeListener === "function") {
 					hook.removeListener("mousedown", onMouseDown);
 					hook.removeListener("mouseup", onMouseUp);
+					if (captureKeystrokes) {
+						hook.removeListener("keydown", onKeyDown);
+						hook.removeListener("keyup", onKeyUp);
+					}
 					if (process.platform === "linux") {
 						hook.removeListener("mousemove", onMouseMove);
 					}

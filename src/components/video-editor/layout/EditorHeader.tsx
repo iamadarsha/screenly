@@ -62,6 +62,7 @@ type Props = {
 	onRequestShareSignIn: () => void;
 	shareRequestNonce: number;
 	authToken?: string;
+	duration?: number;
 	onOpenRecord?: () => void;
 	onOpenStudio?: () => void;
 	onOpenCommandPalette?: () => void;
@@ -287,6 +288,7 @@ export function EditorHeader(props: Props) {
 					onRequestShareSignIn={props.onRequestShareSignIn}
 					shareRequestNonce={props.shareRequestNonce}
 					authToken={props.authToken}
+					duration={props.duration}
 				/>
 			</div>
 		</header>

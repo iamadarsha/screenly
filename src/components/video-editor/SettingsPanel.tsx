@@ -37,6 +37,7 @@ import type { CaptionRetimeSpan } from "./captionOps";
 import { AiToolsPanel } from "./AiToolsPanel";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { VoiceoverPanel } from "./VoiceoverPanel";
+import type { SourceAudioTrackMeta, SourceAudioTrackSettings } from "./audio/audioTypes";
 import {
 	CURSOR_MOTION_PRESETS,
 	type CursorMotionPresetId,
@@ -459,6 +460,11 @@ interface SettingsPanelProps {
 		audioPath: string,
 		trackIndex?: number,
 	) => void;
+	sourceAudioTrackMeta?: SourceAudioTrackMeta;
+	activeSourceAudioTrackSettings?: SourceAudioTrackSettings;
+	selectedClipSourceAudioTrackSettings?: SourceAudioTrackSettings;
+	onSelectedClipSourceAudioTrackNormalizeChange?: (id: string, normalize: boolean) => void;
+	onSelectedClipSourceAudioTrackVolumeChange?: (id: string, volume: number) => void;
 	audioRegions?: AudioRegion[];
 	transcriptCues?: CaptionCue[];
 	currentTimeMs?: number;
@@ -488,6 +494,8 @@ interface SettingsPanelProps {
 	onConnectedZoomEasingChange?: (easing: ZoomTransitionEasing) => void;
 	showCursor?: boolean;
 	onShowCursorChange?: (enabled: boolean) => void;
+	showKeystrokes?: boolean;
+	onShowKeystrokesChange?: (enabled: boolean) => void;
 	loopCursor?: boolean;
 	onLoopCursorChange?: (enabled: boolean) => void;
 	cursorStyle?: CursorStyle;
@@ -573,6 +581,8 @@ interface SettingsPanelProps {
 	onCaptionMerge?: (idA: string, idB: string) => void;
 	onCaptionDelete?: (id: string) => void;
 	onDeleteTranscriptWordRange?: (target: CaptionEditTarget) => void;
+	onRemoveSilenceRegions?: (intervals: Array<{ startMs: number; endMs: number }>) => void;
+	onApplyTranslation?: (translated: Array<{id: string; text: string}>) => void;
 	onSeekToSourceMs?: (sourceMs: number) => void;
 	nativeCaptureUnavailableSession?: boolean;
 	onOpenNativeCaptureUnavailableModal?: () => void;
@@ -926,6 +936,11 @@ export function SettingsPanel({
 	onAudioNormalizeChange,
 	onAudioDelete,
 	onAudioAdded,
+	sourceAudioTrackMeta,
+	activeSourceAudioTrackSettings,
+	selectedClipSourceAudioTrackSettings,
+	onSelectedClipSourceAudioTrackNormalizeChange,
+	onSelectedClipSourceAudioTrackVolumeChange,
 	audioRegions: _audioRegions,
 	transcriptCues,
 	currentTimeMs,
@@ -943,6 +958,8 @@ export function SettingsPanel({
 	onZoomOutDurationMsChange,
 	showCursor = false,
 	onShowCursorChange,
+	showKeystrokes = false,
+	onShowKeystrokesChange,
 	loopCursor = false,
 	onLoopCursorChange,
 	cursorStyle = DEFAULT_CURSOR_STYLE,
@@ -1026,6 +1043,8 @@ export function SettingsPanel({
 	onCaptionMerge,
 	onCaptionDelete,
 	onDeleteTranscriptWordRange,
+	onRemoveSilenceRegions,
+	onApplyTranslation,
 	onSeekToSourceMs,
 	nativeCaptureUnavailableSession = false,
 	onOpenNativeCaptureUnavailableModal,
@@ -1459,6 +1478,7 @@ export function SettingsPanel({
 
 	const resetCursorSection = () => {
 		onShowCursorChange?.(initialEditorPreferences.showCursor);
+		onShowKeystrokesChange?.(initialEditorPreferences.showKeystrokes);
 		onLoopCursorChange?.(initialEditorPreferences.loopCursor);
 		onCursorStyleChange?.(initialEditorPreferences.cursorStyle);
 		onCursorSizeChange?.(initialEditorPreferences.cursorSize);
@@ -2292,12 +2312,13 @@ export function SettingsPanel({
 					<TranscriptPanel
 						cues={autoCaptions}
 						onDeleteWordRange={onDeleteTranscriptWordRange}
+						onRemoveSilenceRegions={onRemoveSilenceRegions}
 						onSeekToMs={onSeekToSourceMs}
 						currentSourceTimeMs={captionCurrentTimeMs}
 					/>
 				</div>
 			)}
-			{autoCaptions.length > 0 && <AiToolsPanel cues={autoCaptions} />}
+			{autoCaptions.length > 0 && <AiToolsPanel cues={autoCaptions} onApplyTranslation={onApplyTranslation} />}
 		</section>
 	);
 
@@ -2705,17 +2726,57 @@ export function SettingsPanel({
 		);
 
 		const audioSectionContent = (
-			<VoiceoverPanel
-				onAudioAdded={onAudioAdded}
-				currentTimeMs={currentTimeMs ?? 0}
-				transcriptCues={transcriptCues ?? autoCaptions ?? []}
-				selectedAudioId={selectedAudioId}
-				selectedAudioVolume={selectedAudioVolume ?? 1}
-				selectedAudioNormalize={Boolean(selectedAudioNormalize)}
-				onAudioVolumeChange={onAudioVolumeChange}
-				onAudioNormalizeChange={onAudioNormalizeChange}
-				onAudioDelete={onAudioDelete}
-			/>
+			<section className="flex flex-col gap-4 text-xs">
+				{sourceAudioTrackMeta && sourceAudioTrackMeta.length > 0 && (
+					<div className="rounded-xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-md shadow-sm flex flex-col gap-3">
+						<div className="font-medium text-white/90 text-[11px] mb-1">
+							Original Recording Audio
+						</div>
+						{sourceAudioTrackMeta.map((track) => {
+							const settings = activeSourceAudioTrackSettings?.[track.id] ||
+								selectedClipSourceAudioTrackSettings?.[track.id] || { volume: 1, normalize: false };
+							return (
+								<div key={track.id} className="flex flex-col gap-2 p-2 rounded-lg bg-black/20 border border-white/5">
+									<div className="flex items-center justify-between">
+										<span className="font-medium text-white/80">{track.label}</span>
+									</div>
+									<SliderControl
+										label="Volume"
+										value={settings.volume}
+										min={0}
+										max={2}
+										step={0.01}
+										onChange={(v) => onSelectedClipSourceAudioTrackVolumeChange?.(track.id, v)}
+										formatValue={(v) => `${Math.round(v * 100)}%`}
+									/>
+									<div className="flex items-center justify-between py-1 mt-1 border-t border-white/5 pt-2">
+										<span className="text-muted-foreground text-[11px] flex flex-col">
+											<span>Studio AI Polish</span>
+											<span className="text-[9px] opacity-70">Enhance clarity and normalize loudness</span>
+										</span>
+										<Switch
+											aria-label="Studio AI Polish"
+											checked={Boolean(settings.normalize)}
+											onCheckedChange={(v) => onSelectedClipSourceAudioTrackNormalizeChange?.(track.id, v)}
+										/>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				)}
+				<VoiceoverPanel
+					onAudioAdded={onAudioAdded}
+					currentTimeMs={currentTimeMs ?? 0}
+					transcriptCues={transcriptCues ?? autoCaptions ?? []}
+					selectedAudioId={selectedAudioId}
+					selectedAudioVolume={selectedAudioVolume ?? 1}
+					selectedAudioNormalize={Boolean(selectedAudioNormalize)}
+					onAudioVolumeChange={onAudioVolumeChange}
+					onAudioNormalizeChange={onAudioNormalizeChange}
+					onAudioDelete={onAudioDelete}
+				/>
+			</section>
 		);
 
 		const clipSectionContent = (
@@ -2871,6 +2932,14 @@ export function SettingsPanel({
 											aria-label={tSettings("effects.showCursor")}
 											checked={showCursor}
 											onCheckedChange={onShowCursorChange}
+										/>
+									</label>
+									<label className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+										<span>{tSettings("effects.showKeystrokes")}</span>
+										<Switch
+											aria-label={tSettings("effects.showKeystrokes")}
+											checked={showKeystrokes}
+											onCheckedChange={onShowKeystrokesChange}
 										/>
 									</label>
 									<label className="flex items-center justify-between gap-3 text-xs text-muted-foreground">

@@ -53,6 +53,7 @@ export function useVideoEditorPresets({
 			zoomOutEasing: appearance.zoomOutEasing,
 			connectedZoomEasing: appearance.connectedZoomEasing,
 			showCursor: appearance.showCursor,
+			showKeystrokes: appearance.showKeystrokes,
 			loopCursor: appearance.loopCursor,
 			cursorStyle: appearance.cursorStyle,
 			cursorSize: appearance.cursorSize,
@@ -119,6 +120,7 @@ export function useVideoEditorPresets({
 			appearance.setZoomOutEasing(snapshot.zoomOutEasing);
 			appearance.setConnectedZoomEasing(snapshot.connectedZoomEasing);
 			appearance.setShowCursor(snapshot.showCursor);
+			appearance.setShowKeystrokes(snapshot.showKeystrokes);
 			appearance.setLoopCursor(snapshot.loopCursor);
 			appearance.setCursorStyle(snapshot.cursorStyle);
 			appearance.setCursorSize(snapshot.cursorSize);

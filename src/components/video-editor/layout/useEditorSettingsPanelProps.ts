@@ -8,6 +8,7 @@ import type { useAudioRegionCommands } from "../hooks/useAudioRegionCommands";
 import type { useCaptionCommands } from "../hooks/useCaptionCommands";
 import type { useClipRegionCommands } from "../hooks/useClipRegionCommands";
 import type { useZoomRegionCommands } from "../hooks/useZoomRegionCommands";
+import type { useVideoEditorAudio } from "../audio/useVideoEditorAudio";
 import { SettingsPanel } from "../SettingsPanel";
 import type { useAppearanceState } from "../state/useAppearanceState";
 import type { useTimelineState } from "../state/useTimelineState";
@@ -24,9 +25,11 @@ type Input = {
 	zoomCommands: ReturnType<typeof useZoomRegionCommands>;
 	clipCommands: ReturnType<typeof useClipRegionCommands>;
 	audioCommands: ReturnType<typeof useAudioRegionCommands>;
+	audio: ReturnType<typeof useVideoEditorAudio>;
 	captionCommands: ReturnType<typeof useCaptionCommands>;
 	annotationCommands: ReturnType<typeof useAnnotationRegionCommands>;
 	handleDeleteTranscriptWordRange: (target: CaptionEditTarget) => void;
+	handleRemoveSilenceRegions: (intervals: Array<{ startMs: number; endMs: number }>) => void;
 	autoCaptionController: ReturnType<typeof useAutoCaptionController>;
 	handleSeek?: (time: number, options?: { pause?: boolean }) => void;
 	effectiveShowCursor: boolean;
@@ -54,9 +57,11 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		zoomCommands,
 		clipCommands,
 		audioCommands,
+		audio,
 		captionCommands,
 		annotationCommands,
 		handleDeleteTranscriptWordRange,
+		handleRemoveSilenceRegions,
 		autoCaptionController,
 		handleSeek,
 		effectiveShowCursor,
@@ -115,6 +120,11 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onAudioNormalizeChange: audioCommands.handleAudioNormalizeChange,
 		onAudioDelete: audioCommands.handleAudioDelete,
 		onAudioAdded: audioCommands.handleAudioAdded,
+		sourceAudioTrackMeta: audio?.sourceAudioTrackMeta,
+		activeSourceAudioTrackSettings: audio?.activeSourceAudioTrackSettings,
+		selectedClipSourceAudioTrackSettings: audio?.selectedClipSourceAudioTrackSettings,
+		onSelectedClipSourceAudioTrackNormalizeChange: audio?.onSelectedClipSourceAudioTrackNormalizeChange,
+		onSelectedClipSourceAudioTrackVolumeChange: audio?.onSelectedClipSourceAudioTrackVolumeChange,
 		audioRegions: timeline.audioRegions,
 		transcriptCues: timeline.autoCaptions,
 		currentTimeMs: Math.round(currentTime * 1000),
@@ -144,6 +154,8 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onConnectedZoomEasingChange: appearance.setConnectedZoomEasing,
 		showCursor: effectiveShowCursor,
 		onShowCursorChange: handleShowCursorChange,
+		showKeystrokes: appearance.showKeystrokes,
+		onShowKeystrokesChange: appearance.setShowKeystrokes,
 		loopCursor: appearance.loopCursor,
 		onLoopCursorChange: appearance.setLoopCursor,
 		cursorStyle: appearance.cursorStyle,
@@ -221,6 +233,13 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onCaptionMerge: captionCommands.handleCaptionMerge,
 		onCaptionDelete: captionCommands.handleCaptionDelete,
 		onDeleteTranscriptWordRange: handleDeleteTranscriptWordRange,
+		onRemoveSilenceRegions: handleRemoveSilenceRegions,
+		onApplyTranslation: (translated: Array<{id: string; text: string}>) => {
+			timeline.setAutoCaptions(prev => prev.map(cue => {
+				const match = translated.find(t => t.id === cue.id);
+				return match ? { ...cue, text: match.text } : cue;
+			}));
+		},
 		onSeekToSourceMs: (sourceMs: number) => {
 			const timelineMs = mapSourceTimeToTimelineTime(sourceMs, timeline.clipRegions);
 			handleSeek?.(timelineMs / 1000, { pause: true });

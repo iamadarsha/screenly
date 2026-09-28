@@ -113,6 +113,7 @@ interface FrameRenderConfig {
 	previewHeight?: number;
 	cursorTelemetry?: CursorTelemetryPoint[];
 	showCursor?: boolean;
+	showKeystrokes?: boolean;
 	cursorStyle?: CursorStyle;
 	cursorSize?: number;
 	cursorSmoothing?: number;
@@ -1446,6 +1447,7 @@ export class FrameRenderer {
 				layoutCache.maskRect,
 				this.config.showCursor ?? true,
 				false,
+				this.config.showKeystrokes ?? false,
 			);
 		}
 

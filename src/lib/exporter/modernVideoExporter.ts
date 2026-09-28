@@ -124,6 +124,7 @@ interface VideoExporterConfig extends ExportConfig {
 	autoCaptionSettings?: AutoCaptionSettings;
 	cursorTelemetry?: CursorTelemetryPoint[];
 	showCursor?: boolean;
+	showKeystrokes?: boolean;
 	cursorStyle?: CursorStyle;
 	cursorSize?: number;
 	cursorSmoothing?: number;
@@ -636,6 +637,7 @@ export class ModernVideoExporter {
 					previewHeight: this.config.previewHeight,
 					cursorTelemetry: this.config.cursorTelemetry,
 					showCursor: this.config.showCursor,
+					showKeystrokes: this.config.showKeystrokes,
 					cursorStyle: this.config.cursorStyle,
 					cursorSize: this.config.cursorSize,
 					cursorSmoothing: this.config.cursorSmoothing,

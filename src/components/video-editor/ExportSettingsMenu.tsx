@@ -14,6 +14,8 @@ import type {
 	GifSizePreset,
 } from "@/lib/exporter";
 import { GIF_FRAME_RATES, GIF_SIZE_PRESETS, MP4_FRAME_RATES } from "@/lib/exporter";
+import { getMp4ExportBitrate } from "@/lib/exporter/exportBitrate";
+import { useMemo } from "react";
 
 interface ExportSettingsMenuProps {
 	exportFormat: ExportFormat;
@@ -39,6 +41,7 @@ interface ExportSettingsMenuProps {
 	gifSizePreset: GifSizePreset;
 	onGifSizePresetChange?: (preset: GifSizePreset) => void;
 	gifOutputDimensions: { width: number; height: number };
+	duration?: number;
 	onExport?: () => void;
 	className?: string;
 }
@@ -117,11 +120,63 @@ export function ExportSettingsMenu({
 	gifSizePreset,
 	onGifSizePresetChange,
 	gifOutputDimensions,
+	duration,
 	onExport,
 	className,
 }: ExportSettingsMenuProps) {
 	const tSettings = useScopedT("settings");
 	const isLegacyModel = exportPipelineModel === "legacy";
+
+	const exportRoute = useMemo(() => {
+		if (exportFormat === "gif") return "Web Worker GIF Engine";
+		if (experimentalNvidiaCudaExport && nvidiaCudaExportAvailable)
+			return "NVIDIA CUDA Hardware Encoder";
+		if (typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.userAgent)) {
+			return "Hardware H.264 (Apple VideoToolbox)";
+		}
+		return "WebCodecs / FFmpeg H.264";
+	}, [exportFormat, experimentalNvidiaCudaExport, nvidiaCudaExportAvailable]);
+
+	const estimatedSize = useMemo(() => {
+		const effectiveDuration = duration && duration > 0 ? duration : 30;
+		if (exportFormat === "gif") {
+			const { width, height } = gifOutputDimensions;
+			const bytes = width * height * gifFrameRate * effectiveDuration * 0.05;
+			const mb = Math.max(0.2, bytes / (1024 * 1024)).toFixed(1);
+			return `${mb} MB`;
+		}
+		const dims = mp4OutputDimensions?.[exportQuality] ?? { width: 1920, height: 1080 };
+		const bitrate = getMp4ExportBitrate({
+			width: dims.width,
+			height: dims.height,
+			frameRate: mp4FrameRate,
+			quality: exportQuality,
+			encodingMode: exportEncodingMode,
+		});
+		const totalBits = bitrate * effectiveDuration;
+		const mb = Math.max(0.5, totalBits / (8 * 1024 * 1024)).toFixed(1);
+		return `${mb} MB`;
+	}, [
+		exportFormat,
+		duration,
+		gifOutputDimensions,
+		gifFrameRate,
+		mp4OutputDimensions,
+		exportQuality,
+		mp4FrameRate,
+		exportEncodingMode,
+	]);
+
+	const estimatedTime = useMemo(() => {
+		const effectiveDuration = duration && duration > 0 ? duration : 30;
+		if (exportFormat === "gif") {
+			const sec = Math.max(2, Math.round(effectiveDuration / 1.5));
+			return `${sec}s`;
+		}
+		const speedFactor = exportRoute.includes("Hardware") ? 3.5 : 1.8;
+		const sec = Math.max(2, Math.round(effectiveDuration / speedFactor));
+		return sec < 60 ? `${sec}s` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
+	}, [duration, exportFormat, exportRoute]);
 
 	return (
 		<Card className={className}>
@@ -255,6 +310,23 @@ export function ExportSettingsMenu({
 						</Switch>
 					</>
 				)}
+				<div
+					className="rounded-lg border border-white/10 bg-white/5 p-3 flex flex-col gap-1.5 text-xs mt-1"
+					data-testid="export-estimate-card"
+				>
+					<div className="flex items-center justify-between text-muted-foreground text-[11px]">
+						<span>Export Route</span>
+						<span className="font-medium text-white/90">{exportRoute}</span>
+					</div>
+					<div className="flex items-center justify-between text-muted-foreground text-[11px]">
+						<span>Estimated Size</span>
+						<span className="font-medium text-emerald-400">{estimatedSize}</span>
+					</div>
+					<div className="flex items-center justify-between text-muted-foreground text-[11px]">
+						<span>Estimated Time</span>
+						<span className="font-medium text-sky-400">~{estimatedTime}</span>
+					</div>
+				</div>
 			</Card.Content>
 			<Card.Footer>
 				<Button size="lg" onClick={onExport} className="w-full">

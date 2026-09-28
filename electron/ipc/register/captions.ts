@@ -254,4 +254,40 @@ export function registerCaptionHandlers() {
 			}
 		},
 	);
+
+	ipcMain.handle(
+		"detect-silence-regions",
+		async (
+			_,
+			options: {
+				videoPath: string;
+				minDurationMs?: number;
+			},
+		) => {
+			try {
+				const { detectSilenceIntervals } = await import("../captions/generate");
+				const { getFfmpegBinaryPath } = await import("../ffmpeg/binary");
+				const ffmpegPath = getFfmpegBinaryPath();
+				// detectSilenceIntervals accepts { ffmpegPath, wavPath } but ffmpeg silencedetect
+				// works on any audio-bearing file (video or audio), not just WAV.
+				const intervals = await detectSilenceIntervals({
+					ffmpegPath,
+					wavPath: options.videoPath,
+				});
+				// Optionally filter by minimum duration
+				const minMs = options.minDurationMs ?? 500;
+				const filtered = intervals.filter(
+					(interval) => (interval.endMs === Number.POSITIVE_INFINITY ? true : interval.endMs - interval.startMs >= minMs),
+				);
+				return { success: true, intervals: filtered };
+			} catch (error) {
+				console.error("Failed to detect silence regions:", error);
+				return {
+					success: false,
+					intervals: [],
+					error: error instanceof Error ? error.message : String(error),
+				};
+			}
+		},
+	);
 }

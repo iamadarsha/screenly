@@ -306,6 +306,7 @@ export function EditorShell(props: Props) {
 				onOpenCommandPalette={() => setCommandPaletteOpen(true)}
 				inspectorCollapsed={inspectorCollapsed}
 				onToggleInspector={() => setInspectorCollapsed((c) => !c)}
+				duration={ui.duration}
 			/>
 			<EditorAnnouncementBanner />
 			<div

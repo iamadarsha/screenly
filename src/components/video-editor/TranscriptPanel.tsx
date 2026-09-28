@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash } from "@/components/ui/icons";
 import { useScopedT } from "@/contexts/I18nContext";
@@ -25,6 +25,7 @@ interface FlatWord {
 interface TranscriptPanelProps {
 	cues: CaptionCue[];
 	onDeleteWordRange: (target: CaptionEditTarget) => void;
+	onRemoveSilenceRegions?: (intervals: Array<{ startMs: number; endMs: number }>) => void;
 	onSeekToMs?: (sourceMs: number) => void;
 	currentSourceTimeMs?: number;
 }
@@ -53,12 +54,15 @@ function flattenWords(cues: CaptionCue[]): FlatWord[] {
 export function TranscriptPanel({
 	cues,
 	onDeleteWordRange,
+	onRemoveSilenceRegions,
 	onSeekToMs,
 	currentSourceTimeMs,
 }: TranscriptPanelProps) {
 	const t = useScopedT("settings");
 	const [anchorFlatIndex, setAnchorFlatIndex] = useState<number | null>(null);
 	const [selectedFlatIndexes, setSelectedFlatIndexes] = useState<Set<number>>(new Set());
+	const [silenceIntervals, setSilenceIntervals] = useState<Array<{ startMs: number; endMs: number }>>([]);
+	const [detectingSilence, setDetectingSilence] = useState(false);
 
 	const flatWords = useMemo(() => flattenWords(cues), [cues]);
 	const fillerMatches = useMemo(() => detectFillerWords(cues), [cues]);
@@ -80,6 +84,35 @@ export function TranscriptPanel({
 			flatWords.filter((w) => byCueWord.has(`${w.cueId}:${w.cueWordIndex}`)).map((w) => w.flatIndex),
 		);
 	}, [flatWords, repeatedPhraseMatches]);
+
+	const handleDetectSilence = useCallback(async () => {
+		if (!window.electronAPI?.detectSilenceRegions) return;
+		setDetectingSilence(true);
+		try {
+			// Use the first clip's source path if available
+			const videoPath = (window as unknown as { __screenly_video_path?: string }).__screenly_video_path;
+			if (!videoPath) {
+				setSilenceIntervals([]);
+				return;
+			}
+			const result = await window.electronAPI.detectSilenceRegions(videoPath, 500);
+			if (result.success && result.intervals.length > 0) {
+				setSilenceIntervals(result.intervals);
+			} else {
+				setSilenceIntervals([]);
+			}
+		} catch {
+			setSilenceIntervals([]);
+		} finally {
+			setDetectingSilence(false);
+		}
+	}, []);
+
+	const handleRemoveAllSilence = useCallback(() => {
+		if (silenceIntervals.length === 0 || !onRemoveSilenceRegions) return;
+		onRemoveSilenceRegions(silenceIntervals);
+		setSilenceIntervals([]);
+	}, [silenceIntervals, onRemoveSilenceRegions]);
 
 	if (flatWords.length === 0) {
 		return (
@@ -275,6 +308,46 @@ export function TranscriptPanel({
 							</Button>
 						</div>
 					))}
+				</div>
+			)}
+
+			{onRemoveSilenceRegions && (
+				<div className="flex flex-col gap-1.5">
+					<span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+						{t("captions.transcript.silenceDetection", "Silence Detection")}
+					</span>
+					{silenceIntervals.length === 0 ? (
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							className="h-8 w-full text-xs"
+							disabled={detectingSilence}
+							onClick={handleDetectSilence}
+						>
+							{detectingSilence
+								? t("captions.transcript.detectingSilence", "Detecting…")
+								: t("captions.transcript.detectSilence", "Detect Silent Pauses")}
+						</Button>
+					) : (
+						<div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/[0.03] px-2.5 py-1.5">
+							<span className="text-xs text-muted-foreground">
+								{t("captions.transcript.silenceFound", "{{count}} pause(s) found", {
+									count: silenceIntervals.length,
+								})}
+							</span>
+							<Button
+								type="button"
+								variant="destructive"
+								size="sm"
+								className="h-7 shrink-0 gap-1 text-[11px]"
+								onClick={handleRemoveAllSilence}
+							>
+								<Trash className="h-2.5 w-2.5" />
+								{t("captions.transcript.removeSilences", "Remove All")}
+							</Button>
+						</div>
+					)}
 				</div>
 			)}
 

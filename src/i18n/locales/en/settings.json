@@ -40,6 +40,7 @@
 		"title": "Video Effects",
 		"show": "Show",
 		"showCursor": "Show Cursor",
+		"showKeystrokes": "Show Keyboard Shortcuts",
 		"loopCursor": "Loop cursor",
 		"cursorStyle": "Cursor Style",
 		"cursorStyleOptions": {

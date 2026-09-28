@@ -1,4 +1,4 @@
-import { Assets, BlurFilter, Container, Graphics, Sprite, Texture } from "pixi.js";
+import { Assets, BlurFilter, Container, Graphics, Sprite, Texture, Text, TextStyle } from "pixi.js";
 import { MotionBlurFilter } from "pixi-filters/motion-blur";
 import minimalCursorUrl from "@/assets/cursors/custom/minimal-cursor.svg";
 import { getRenderableAssetUrl } from "@/lib/assetPath";
@@ -784,6 +784,21 @@ function findLatestInteractionSample(samples: CursorTelemetryPoint[], timeMs: nu
 	return null;
 }
 
+function findLatestKeystrokeSample(samples: CursorTelemetryPoint[], timeMs: number) {
+	for (let index = samples.length - 1; index >= 0; index -= 1) {
+		const sample = samples[index];
+		if (sample.timeMs > timeMs) {
+			continue;
+		}
+
+		if (sample.interactionType === "keystroke" && sample.keystroke) {
+			return sample;
+		}
+	}
+
+	return null;
+}
+
 function findLatestStableCursorType(samples: CursorTelemetryPoint[], timeMs: number) {
 	// Binary search to find position at timeMs, then scan backwards
 	let lo = 0;
@@ -1017,6 +1032,9 @@ function getCursorVisualState(
 			? 1 - ageMs / clickBounceDuration
 			: 0;
 
+	const latestKeystroke = findLatestKeystrokeSample(samples, timeMs);
+	const keystrokeAgeMs = latestKeystroke ? Math.max(0, timeMs - latestKeystroke.timeMs) : Number.POSITIVE_INFINITY;
+
 	return {
 		cursorType: findLatestStableCursorType(samples, timeMs),
 		interactionType,
@@ -1029,6 +1047,7 @@ function getCursorVisualState(
 			clickEffectAgeMs <= clickEffectDurationMs
 				? 1 - clickEffectAgeMs / clickEffectDurationMs
 				: 0,
+		keystrokeSample: latestKeystroke && keystrokeAgeMs < 2000 ? latestKeystroke : null,
 	};
 }
 
@@ -1138,6 +1157,10 @@ export class PixiCursorOverlay {
 	private cursorVisible = false;
 	private swayRotation = 0;
 	private swaySpring = createSpringState(0);
+	
+	private keystrokeContainer: Container;
+	private keystrokeGraphics: Graphics;
+	private keystrokeText: Text;
 
 	constructor(config: Partial<CursorRenderConfig> = {}) {
 		this.config = {
@@ -1152,6 +1175,17 @@ export class PixiCursorOverlay {
 
 		this.container = new Container();
 		this.container.label = "cursor-overlay";
+
+		this.keystrokeContainer = new Container();
+		this.keystrokeGraphics = new Graphics();
+		this.keystrokeText = new Text("", new TextStyle({
+			fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+			fontSize: 32,
+			fill: 0xffffff,
+			fontWeight: "600",
+		}));
+		this.keystrokeContainer.addChild(this.keystrokeGraphics);
+		this.keystrokeContainer.addChild(this.keystrokeText);
 
 		this.clickRingGraphics = new Graphics();
 		const initialCustomAsset = getCursorStyleAsset("figma");
@@ -1204,6 +1238,7 @@ export class PixiCursorOverlay {
 		this.container.filters = null;
 
 		this.container.addChild(
+			this.keystrokeContainer,
 			this.clickRingGraphics,
 			this.customCursorShadowSprite,
 			...Object.values(this.cursorShadowSprites),
@@ -1327,6 +1362,7 @@ export class PixiCursorOverlay {
 		viewport: CursorViewportRect,
 		visible: boolean,
 		freeze = false,
+		showKeystrokes = false,
 	): void {
 		if (samples.length === 0 || viewport.width <= 0 || viewport.height <= 0) {
 			this.container.visible = false;
@@ -1361,7 +1397,7 @@ export class PixiCursorOverlay {
 		const h =
 			this.config.dotRadius *
 			getCursorViewportScale(viewport.width, this.config.minViewportScale);
-		const { cursorType, clickSample, clickBounceProgress, clickProgress } =
+		const { cursorType, clickSample, clickBounceProgress, clickProgress, keystrokeSample } =
 			getCursorVisualState(
 				samples,
 				timeMs,
@@ -1385,7 +1421,9 @@ export class PixiCursorOverlay {
 			clickProgress > 0 &&
 			Boolean(projectedClickSample?.visible);
 
-		if (!shouldShowCursorSprite && !shouldDrawClickEffect) {
+		const shouldDrawKeystrokes = showKeystrokes && Boolean(keystrokeSample);
+
+		if (!shouldShowCursorSprite && !shouldDrawClickEffect && !shouldDrawKeystrokes) {
 			this.container.visible = false;
 			this.cursorVisible = false;
 			this.clickRingGraphics.clear();
@@ -1534,6 +1572,37 @@ export class PixiCursorOverlay {
 			this.customCursorSprite.width = scaledH * bounceScale * asset.aspectRatio;
 			this.customCursorSprite.position.set(px, py);
 			this.customCursorSprite.rotation = swayRotation;
+		}
+
+		if (shouldDrawKeystrokes && keystrokeSample) {
+			this.keystrokeContainer.visible = true;
+			const keysStr = keystrokeSample.keystroke!.join(" + ");
+			if (this.keystrokeText.text !== keysStr) {
+				this.keystrokeText.text = keysStr;
+			}
+			
+			const scale = viewport.width / 1920;
+			const paddingX = 24 * scale;
+			const paddingY = 16 * scale;
+			
+			this.keystrokeText.scale.set(scale);
+			
+			this.keystrokeGraphics.clear();
+			this.keystrokeGraphics.roundRect(
+				0, 0,
+				this.keystrokeText.width + paddingX * 2,
+				this.keystrokeText.height + paddingY * 2,
+				16 * scale
+			);
+			this.keystrokeGraphics.fill({ color: 0x000000, alpha: 0.7 });
+			
+			this.keystrokeText.x = paddingX;
+			this.keystrokeText.y = paddingY;
+			
+			this.keystrokeContainer.x = viewport.x + viewport.width / 2 - this.keystrokeGraphics.width / 2;
+			this.keystrokeContainer.y = viewport.y + viewport.height - this.keystrokeGraphics.height - (40 * scale);
+		} else {
+			this.keystrokeContainer.visible = false;
 		}
 
 		this.applyCursorMotionBlur(px, py, timeMs, shouldFreezeCursorMotion);

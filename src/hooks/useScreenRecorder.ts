@@ -2072,7 +2072,9 @@ export function useScreenRecorder(options?: UseScreenRecorderOptions): UseScreen
 
 					setRecording(true);
 					try {
-						await window.electronAPI?.setRecordingState(true);
+						const captureKeystrokes =
+							window.electronAPI?.getAppSetting("captureKeystrokes") === true;
+						await window.electronAPI?.setRecordingState(true, captureKeystrokes);
 					} catch (stateError) {
 						console.warn(
 							"Failed to notify main process that native recording started:",
@@ -2437,7 +2439,8 @@ export function useScreenRecorder(options?: UseScreenRecorderOptions): UseScreen
 			recorder.start(RECORDER_TIMESLICE_MS);
 			setRecording(true);
 			try {
-				await window.electronAPI?.setRecordingState(true);
+				const captureKeystrokes = window.electronAPI?.getAppSetting("captureKeystrokes") === true;
+				await window.electronAPI?.setRecordingState(true, captureKeystrokes);
 			} catch (stateError) {
 				console.warn("Failed to notify main process that recording started:", stateError);
 			}

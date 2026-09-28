@@ -108,6 +108,7 @@ export interface ProjectEditorState {
 	zoomOutEasing: ZoomTransitionEasing;
 	connectedZoomEasing: ZoomTransitionEasing;
 	showCursor: boolean;
+	showKeystrokes: boolean;
 	loopCursor: boolean;
 	cursorStyle: CursorStyle;
 	cursorClickEffect: CursorClickEffectStyle;
@@ -902,6 +903,7 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 			DEFAULT_CONNECTED_ZOOM_EASING,
 		),
 		showCursor: typeof editor.showCursor === "boolean" ? editor.showCursor : true,
+		showKeystrokes: typeof editor.showKeystrokes === "boolean" ? editor.showKeystrokes : false,
 		loopCursor: typeof editor.loopCursor === "boolean" ? editor.loopCursor : false,
 		cursorStyle: normalizedCursorStyle,
 		cursorClickEffect: normalizeCursorClickEffectStyle(

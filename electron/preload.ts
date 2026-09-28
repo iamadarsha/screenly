@@ -630,8 +630,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	getRecordedVideoPath: () => {
 		return ipcRenderer.invoke("get-recorded-video-path");
 	},
-	setRecordingState: (recording: boolean) => {
-		return ipcRenderer.invoke("set-recording-state", recording);
+	setRecordingState: (recording: boolean, captureKeystrokes?: boolean) => {
+		return ipcRenderer.invoke("set-recording-state", recording, captureKeystrokes);
 	},
 	getDiskSpaceStatus: () => {
 		return ipcRenderer.invoke("get-disk-space-status");
@@ -832,6 +832,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
 			callback(payload);
 		ipcRenderer.on("voiceover-model-download-progress", listener);
 		return () => ipcRenderer.removeListener("voiceover-model-download-progress", listener);
+	},
+	detectSilenceRegions: (videoPath: string, minDurationMs?: number) => {
+		return ipcRenderer.invoke("detect-silence-regions", { videoPath, minDurationMs }) as Promise<{
+			success: boolean;
+			intervals: Array<{ startMs: number; endMs: number }>;
+			error?: string;
+		}>;
 	},
 	generateAutoCaptions: (options: {
 		videoPath: string;

@@ -597,7 +597,7 @@ interface Window {
 			startDelayMsByPath?: Record<string, number>;
 			error?: string;
 		}>;
-		setRecordingState: (recording: boolean) => Promise<void>;
+		setRecordingState: (recording: boolean, captureKeystrokes?: boolean) => Promise<void>;
 		getDiskSpaceStatus: () => Promise<{
 			status: "ok" | "low" | "critical" | "unknown";
 			freeBytes: number | null;
@@ -807,6 +807,14 @@ interface Window {
 		onVoiceoverModelDownloadProgress: (
 			callback: (state: { progress: number }) => void,
 		) => () => void;
+		detectSilenceRegions: (
+			videoPath: string,
+			minDurationMs?: number,
+		) => Promise<{
+			success: boolean;
+			intervals: Array<{ startMs: number; endMs: number }>;
+			error?: string;
+		}>;
 		generateAutoCaptions: (options: {
 			videoPath: string;
 			whisperExecutablePath?: string;
@@ -1160,7 +1168,9 @@ interface CursorTelemetryPoint {
 		| "double-click"
 		| "right-click"
 		| "middle-click"
-		| "mouseup";
+		| "mouseup"
+		| "keystroke";
+	keystroke?: string[];
 	cursorType?:
 		| "arrow"
 		| "text"

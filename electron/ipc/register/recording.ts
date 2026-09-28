@@ -1983,7 +1983,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("set-recording-state", (_, recording: boolean) => {
+	ipcMain.handle("set-recording-state", (_, recording: boolean, captureKeystrokes?: boolean) => {
 		if (recording) {
 			stopCursorCapture();
 			stopInteractionCapture();
@@ -1998,7 +1998,7 @@ export function registerRecordingHandlers(
 			setLastLeftClick(null);
 			sampleCursorPoint();
 			startCursorSampling();
-			void startInteractionCapture();
+			void startInteractionCapture(captureKeystrokes);
 			beginRecordingCheckpoint();
 		} else {
 			setIsCursorCaptureActive(false);

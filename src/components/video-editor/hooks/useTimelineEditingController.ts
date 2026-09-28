@@ -8,7 +8,7 @@ import type { CaptionEditTarget } from "../captionEditing";
 import type { useAppearanceState } from "../state/useAppearanceState";
 import type { useTimelineState } from "../state/useTimelineState";
 import type { TimelineEditorHandle } from "../timeline/TimelineEditor";
-import { deleteTranscriptWordRange } from "../transcriptEditing";
+import { deleteTranscriptWordRange, planSilenceRemoval } from "../transcriptEditing";
 import type { EditorEffectSection } from "../types";
 import type { VideoPlaybackRef } from "../VideoPlayback";
 import { getErrorMessage, summarizeErrorMessage } from "../videoEditorUtils";
@@ -255,6 +255,46 @@ export function useTimelineEditingController(input: Input) {
 		],
 	);
 
+	const handleRemoveSilenceRegions = useCallback(
+		(intervals: Array<{ startMs: number; endMs: number }>) => {
+			const result = planSilenceRemoval({
+				intervals,
+				autoCaptions: timeline.autoCaptions,
+				clipRegions: timeline.clipRegions,
+				zoomRegions: timeline.zoomRegions,
+				annotationRegions: timeline.annotationRegions,
+				audioRegions: timeline.audioRegions,
+				createClipId: () => `clip-${input.nextClipIdRef.current++}`,
+			});
+			if (!result) {
+				toast.info("No silence regions could be removed.");
+				return;
+			}
+			// All setters fire in one handler => single undo step
+			timeline.setClipRegions(result.clipRegions);
+			timeline.setAutoCaptions(result.autoCaptions);
+			timeline.setZoomRegions(result.zoomRegions);
+			timeline.setAnnotationRegions(result.annotationRegions);
+			timeline.setAudioRegions(result.audioRegions);
+			timeline.setSelectedCaptionId(null);
+			toast.success(`Removed ${result.removedCount} silence region(s).`);
+		},
+		[
+			timeline.autoCaptions,
+			timeline.clipRegions,
+			timeline.zoomRegions,
+			timeline.annotationRegions,
+			timeline.audioRegions,
+			timeline.setClipRegions,
+			timeline.setAutoCaptions,
+			timeline.setZoomRegions,
+			timeline.setAnnotationRegions,
+			timeline.setAudioRegions,
+			timeline.setSelectedCaptionId,
+			input.nextClipIdRef,
+		],
+	);
+
 	useEditorGlobalInteractions({
 		timeline,
 		videoPlaybackRef: input.videoPlaybackRef,
@@ -278,5 +318,6 @@ export function useTimelineEditingController(input: Input) {
 		handleSelectAnnotation,
 		handleAutoSuggestZoomsConsumed: freshZoom.handleAutoSuggestZoomsConsumed,
 		handleDeleteTranscriptWordRange,
+		handleRemoveSilenceRegions,
 	};
 }

@@ -60,9 +60,11 @@ export function normalizeCursorTelemetrySamples(rawSamples: unknown): CursorTele
 					point.interactionType === "right-click" ||
 					point.interactionType === "middle-click" ||
 					point.interactionType === "move" ||
-					point.interactionType === "mouseup"
+					point.interactionType === "mouseup" ||
+					point.interactionType === "keystroke"
 						? point.interactionType
 						: undefined,
+				keystroke: Array.isArray(point.keystroke) ? point.keystroke : undefined,
 				cursorType:
 					point.cursorType === "arrow" ||
 					point.cursorType === "text" ||
@@ -251,6 +253,25 @@ export function pushCursorSample(
 		interactionType,
 		cursorType: cursorType ?? currentCursorVisualType,
 	} as CursorTelemetryPoint);
+
+	if (activeCursorSamples.length > MAX_CURSOR_SAMPLES) {
+		activeCursorSamples.shift();
+	}
+}
+
+export function pushKeystrokeSample(
+	cx: number,
+	cy: number,
+	timeMs: number,
+	keys: string[],
+) {
+	activeCursorSamples.push({
+		timeMs: Math.max(0, timeMs),
+		cx,
+		cy,
+		interactionType: "keystroke",
+		keystroke: keys,
+	});
 
 	if (activeCursorSamples.length > MAX_CURSOR_SAMPLES) {
 		activeCursorSamples.shift();

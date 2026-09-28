@@ -60,6 +60,7 @@ export function useAppearanceState(preferences: EditorPreferences) {
 		preferences.connectedZoomEasing ?? DEFAULT_CONNECTED_ZOOM_EASING,
 	);
 	const [showCursor, setShowCursor] = useState(preferences.showCursor);
+	const [showKeystrokes, setShowKeystrokes] = useState(preferences.showKeystrokes);
 	const [loopCursor, setLoopCursor] = useState(preferences.loopCursor);
 	const [cursorStyle, setCursorStyle] = useState<CursorStyle>(
 		preferences.cursorStyle ?? DEFAULT_CURSOR_STYLE,
@@ -148,6 +149,8 @@ export function useAppearanceState(preferences: EditorPreferences) {
 		setConnectedZoomEasing,
 		showCursor,
 		setShowCursor,
+		showKeystrokes,
+		setShowKeystrokes,
 		loopCursor,
 		setLoopCursor,
 		cursorStyle,

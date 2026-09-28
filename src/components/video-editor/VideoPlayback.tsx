@@ -260,6 +260,7 @@ interface VideoPlaybackProps {
 	onAnnotationSizeChange?: (id: string, size: { width: number; height: number }) => void;
 	cursorTelemetry?: CursorTelemetryPoint[];
 	showCursor?: boolean;
+	showKeystrokes?: boolean;
 	cursorStyle?: CursorStyle;
 	cursorSize?: number;
 	cursorSmoothing?: number;
@@ -346,6 +347,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 			onAnnotationSizeChange,
 			cursorTelemetry = [],
 			showCursor = false,
+			showKeystrokes = false,
 			cursorStyle = DEFAULT_CURSOR_STYLE,
 			cursorSize = DEFAULT_CURSOR_SIZE,
 			cursorSmoothing = DEFAULT_CURSOR_SMOOTHING,
@@ -491,6 +493,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 		const cursorOverlayRef = useRef<PixiCursorOverlay | null>(null);
 		const cursorTelemetryRef = useRef<CursorTelemetryPoint[]>([]);
 		const showCursorRef = useRef(showCursor);
+		const showKeystrokesRef = useRef(showKeystrokes);
 		const cursorSizeRef = useRef(cursorSize);
 		const cursorStyleRef = useRef(cursorStyle);
 		const cursorSmoothingRef = useRef(cursorSmoothing);
@@ -1417,8 +1420,9 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 
 		useEffect(() => {
 			showCursorRef.current = showCursor;
+			showKeystrokesRef.current = showKeystrokes;
 			requestPausedFrameRefresh();
-		}, [showCursor, requestPausedFrameRefresh]);
+		}, [showCursor, showKeystrokes, requestPausedFrameRefresh]);
 
 		useEffect(() => {
 			cursorStyleRef.current = cursorStyle;
@@ -2139,6 +2143,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 						baseMaskRef.current,
 						showCursorRef.current,
 						isSeekingRef.current || shouldSnapPausedFrameRef.current,
+						showKeystrokesRef.current,
 					);
 				}
 
@@ -2500,6 +2505,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 								>
 									<div
 										ref={captionBoxRef}
+										dir="auto"
 										className="focus-visible:outline-2 focus-visible:outline-accent"
 										role={
 											onEditAutoCaption && !isCaptionEditing

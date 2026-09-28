@@ -27,6 +27,7 @@ type PersistedEditorControls = Pick<
 	| "zoomOutEasing"
 	| "connectedZoomEasing"
 	| "showCursor"
+	| "showKeystrokes"
 	| "loopCursor"
 	| "cursorStyle"
 	| "cursorSize"
@@ -115,6 +116,7 @@ export const DEFAULT_EDITOR_PREFERENCES: EditorPreferences = {
 	zoomOutEasing: DEFAULT_EDITOR_CONTROLS.zoomOutEasing,
 	connectedZoomEasing: DEFAULT_EDITOR_CONTROLS.connectedZoomEasing,
 	showCursor: DEFAULT_EDITOR_CONTROLS.showCursor,
+	showKeystrokes: DEFAULT_EDITOR_CONTROLS.showKeystrokes,
 	loopCursor: DEFAULT_EDITOR_CONTROLS.loopCursor,
 	cursorStyle: DEFAULT_EDITOR_CONTROLS.cursorStyle,
 	cursorSize: DEFAULT_EDITOR_CONTROLS.cursorSize,
@@ -312,6 +314,7 @@ function normalizeEditorControls(
 		zoomOutEasing: sanitizedRaw.zoomOutEasing ?? fallback.zoomOutEasing,
 		connectedZoomEasing: sanitizedRaw.connectedZoomEasing ?? fallback.connectedZoomEasing,
 		showCursor: sanitizedRaw.showCursor ?? fallback.showCursor,
+		showKeystrokes: sanitizedRaw.showKeystrokes ?? fallback.showKeystrokes,
 		loopCursor: sanitizedRaw.loopCursor ?? fallback.loopCursor,
 		cursorStyle: sanitizedRaw.cursorStyle ?? fallback.cursorStyle,
 		cursorSize: sanitizedRaw.cursorSize ?? fallback.cursorSize,
@@ -386,6 +389,7 @@ function normalizeEditorControls(
 		zoomOutEasing: normalized.zoomOutEasing,
 		connectedZoomEasing: normalized.connectedZoomEasing,
 		showCursor: normalized.showCursor,
+		showKeystrokes: normalized.showKeystrokes,
 		loopCursor: normalized.loopCursor,
 		cursorStyle: normalized.cursorStyle,
 		cursorSize: normalized.cursorSize,

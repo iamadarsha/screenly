@@ -28,6 +28,7 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 	const [captureSupported, setCaptureSupported] = useState(false);
 	const [replayBufferEnabled, setReplayBufferEnabled] = useState(false);
 	const [replayBufferDurationSec, setReplayBufferDurationSec] = useState(60);
+	const [captureKeystrokes, setCaptureKeystrokes] = useState(false);
 	const [busy, setBusy] = useState(false);
 	const run = async (action: () => Promise<void>) => {
 		setBusy(true);
@@ -55,6 +56,10 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 				if (replayBuffer.success) {
 					setReplayBufferEnabled(replayBuffer.enabled);
 					setReplayBufferDurationSec(replayBuffer.durationSec);
+				}
+				const keystrokesSetting = window.electronAPI.getAppSetting("captureKeystrokes");
+				if (typeof keystrokesSetting === "boolean") {
+					setCaptureKeystrokes(keystrokesSetting);
 				}
 			})
 			.catch((error) => toast.error(String(error)));
@@ -147,6 +152,26 @@ export function DashboardSettings({ onImportFile }: { onImportFile: () => Promis
 									if (!result.success)
 										throw Error(result.error || "Could not update Instant Replay");
 									setReplayBufferEnabled(result.enabled ?? enabled);
+								})
+							}
+						/>
+					</SettingsRow>
+					<SettingsRow
+						title="Capture Keyboard Shortcuts"
+						description="Records modifier shortcuts (e.g., Cmd+C) during recording for overlays. Disabled by default to protect privacy. Does not capture standard typing or password fields."
+					>
+						<Switch
+							aria-label="Capture Keyboard Shortcuts"
+							checked={captureKeystrokes}
+							disabled={busy}
+							onCheckedChange={(enabled) =>
+								void run(async () => {
+									const result = await window.electronAPI.setAppSetting(
+										"captureKeystrokes",
+										enabled,
+									);
+									if (!result) throw Error("Could not update shortcut capture");
+									setCaptureKeystrokes(enabled);
 								})
 							}
 						/>

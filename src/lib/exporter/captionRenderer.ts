@@ -76,20 +76,31 @@ export function renderCaptions(
 	});
 	ctx.fill();
 
-	ctx.textAlign = "left";
+	const isRtl = activeCaptionLayout.visibleLines.some((line) =>
+		line.words.some((w) => /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/.test(w.text))
+	);
+
+	ctx.textAlign = isRtl ? "right" : "left";
 	ctx.textBaseline = "middle";
+	ctx.direction = isRtl ? "rtl" : "ltr";
 
 	activeCaptionLayout.visibleLines.forEach((line, lineIndex) => {
-		let cursorX = -line.width / 2;
+		let cursorX = isRtl ? line.width / 2 : -line.width / 2;
 		const lineY = -boxHeight / 2 + paddingY + lineHeight * lineIndex + lineHeight / 2;
 
 		line.words.forEach((word) => {
-			const segmentText = `${word.leadingSpace ? " " : ""}${word.text}`;
+			const segmentText = isRtl 
+				? `${word.text}${word.leadingSpace ? " " : ""}` 
+				: `${word.leadingSpace ? " " : ""}${word.text}`;
 			const segmentWidth = ctx.measureText(segmentText).width;
 			const visualState = getCaptionWordVisualState(
 				activeCaptionLayout.hasWordTimings,
 				word.state,
 			);
+
+			if (isRtl) {
+				cursorX -= segmentWidth;
+			}
 
 			ctx.save();
 			ctx.translate(cursorX, lineY);
@@ -100,7 +111,9 @@ export function renderCaptions(
 			ctx.fillText(segmentText, 0, 0);
 			ctx.restore();
 
-			cursorX += segmentWidth;
+			if (!isRtl) {
+				cursorX += segmentWidth;
+			}
 		});
 	});
 

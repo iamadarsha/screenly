@@ -247,3 +247,64 @@ export function detectRepeatedPhrases(cues: CaptionCue[]): RepeatedPhraseMatch[]
 
 	return matches;
 }
+
+export interface SilenceRemovalResult {
+	clipRegions: ClipRegion[];
+	autoCaptions: CaptionCue[];
+	zoomRegions: ZoomRegion[];
+	annotationRegions: AnnotationRegion[];
+	audioRegions: AudioRegion[];
+	removedCount: number;
+}
+
+export function planSilenceRemoval(params: {
+	intervals: Array<{ startMs: number; endMs: number }>;
+	autoCaptions: CaptionCue[];
+	clipRegions: ClipRegion[];
+	zoomRegions: ZoomRegion[];
+	annotationRegions: AnnotationRegion[];
+	audioRegions: AudioRegion[];
+	createClipId: () => string;
+}): SilenceRemovalResult | null {
+	const sorted = [...params.intervals]
+		.filter((i) => Number.isFinite(i.endMs) && i.endMs > i.startMs)
+		.sort((a, b) => b.startMs - a.startMs); // reverse order so offsets don't shift
+
+	if (sorted.length === 0) return null;
+
+	let clips = [...params.clipRegions];
+	let captions = [...params.autoCaptions];
+	let zooms = [...params.zoomRegions];
+	let annotations = [...params.annotationRegions];
+	let audio = [...params.audioRegions];
+	let removedCount = 0;
+
+	for (const interval of sorted) {
+		const clipPlan = planTimeRangeDeletion({
+			clipRegions: clips,
+			startMs: interval.startMs,
+			endMs: interval.endMs,
+			createId: params.createClipId,
+		});
+		if (!clipPlan) continue;
+
+		const { splitClips, nextClips } = clipPlan;
+		clips = nextClips;
+		captions = rippleRegions(captions, splitClips, nextClips);
+		zooms = rippleRegions(zooms, splitClips, nextClips);
+		annotations = rippleRegions(annotations, splitClips, nextClips);
+		audio = rippleRegions(audio, splitClips, nextClips);
+		removedCount++;
+	}
+
+	if (removedCount === 0) return null;
+
+	return {
+		clipRegions: clips,
+		autoCaptions: captions,
+		zoomRegions: zooms,
+		annotationRegions: annotations,
+		audioRegions: audio,
+		removedCount,
+	};
+}
