@@ -80,10 +80,16 @@ export async function translateCaptionsWithAi(
 
 	const langLabel = TRANSLATION_TARGETS.find((t) => t.code === targetLanguage)?.label ?? targetLanguage;
 
+	// Output size scales with cue count (one translated string per cue), unlike chapters/title/
+	// summary whose output is small regardless of transcript length — the default 30s budget
+	// used elsewhere is too tight once there are more than a handful of cues.
+	const timeoutMs = Math.min(180_000, 30_000 + cueList.length * 4_000);
+
 	const result = await promptLocalModelForJson({
 		prompt: `Translate each caption cue below to ${langLabel}. Return JSON with "translations" array, each item having "id" (same cue id) and "text" (translated text). Preserve original timing — only translate the text content.\n\nCues:\n${JSON.stringify(cueList)}`,
 		responseJSONSchema: TRANSLATION_SCHEMA,
 		validate: isValidTranslation,
+		timeoutMs,
 	});
 
 	if (result.ok) {
