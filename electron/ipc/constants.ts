@@ -30,6 +30,20 @@ export const WHISPER_MODEL_DOWNLOAD_URL =
 	"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin";
 export const WHISPER_MODEL_DIR = path.join(USER_DATA_PATH, "whisper");
 export const WHISPER_SMALL_MODEL_PATH = path.join(WHISPER_MODEL_DIR, "ggml-small.bin");
+/** Storage root for Phase 4C local reasoning models — separate from the whisper ASR model dir. */
+export const AI_MODELS_DIR = path.join(USER_DATA_PATH, "ai-models");
+/**
+ * Gemma 4 E4B (instruction-tuned, Q4_0 quantization), from the official
+ * ggml-org GGUF conversion — the same maintainers as whisper.cpp/llama.cpp.
+ * URL and SHA-256 verified directly against the Hugging Face repo's file
+ * listing before use (never guessed). Apache-2.0 licensed. ~4.3 GiB.
+ */
+export const GEMMA4_E4B_MODEL_ALIAS = "gemma-4-e4b-it-q4_0";
+export const GEMMA4_E4B_MODEL_URL =
+	"https://huggingface.co/ggml-org/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q4_0.gguf";
+export const GEMMA4_E4B_MODEL_SHA256 =
+	"a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2";
+export const GEMMA4_E4B_MODEL_PATH = path.join(AI_MODELS_DIR, "gemma-4-E4B-it-Q4_0.gguf");
 export const COMPANION_AUDIO_LAYOUTS = [
 	{ platform: "mac" as const, systemSuffix: ".system.m4a", micSuffix: ".mic.m4a" },
 	{ platform: "win" as const, systemSuffix: ".system.wav", micSuffix: ".mic.wav" },

@@ -1,6 +1,7 @@
 import type {
 	CaptionCuePayload,
 	CaptionWordPayload,
+	WhisperJsonResult,
 	WhisperJsonSegment,
 	WhisperJsonToken,
 } from "../types";
@@ -75,17 +76,29 @@ export function parseWhisperJsonWords(tokens: unknown): CaptionWordPayload[] {
 	return words.filter((word) => word.text.trim().length > 0);
 }
 
-export function parseWhisperJsonCues(content: string): CaptionCuePayload[] {
+export type WhisperJsonParseResult = {
+	cues: CaptionCuePayload[];
+	/** Whisper's own detected/effective language (e.g. "en"), when the runtime reports one. */
+	detectedLanguage?: string;
+};
+
+export function parseWhisperJsonCues(content: string): WhisperJsonParseResult {
 	try {
 		const parsed = JSON.parse(content) as {
 			transcription?: unknown;
+			result?: WhisperJsonResult;
 		};
 
+		const detectedLanguage =
+			typeof parsed.result?.language === "string" && parsed.result.language.trim()
+				? parsed.result.language.trim()
+				: undefined;
+
 		if (!Array.isArray(parsed.transcription)) {
-			return [];
+			return { cues: [], detectedLanguage };
 		}
 
-		return parsed.transcription
+		const cues = parsed.transcription
 			.map((segment, index) => {
 				if (!segment || typeof segment !== "object") {
 					return null;
@@ -121,9 +134,11 @@ export function parseWhisperJsonCues(content: string): CaptionCuePayload[] {
 				};
 			})
 			.filter((cue): cue is CaptionCuePayload => cue != null);
+
+		return { cues, detectedLanguage };
 	} catch (error) {
 		console.warn("[auto-captions] Failed to parse Whisper JSON output:", error);
-		return [];
+		return { cues: [] };
 	}
 }
 

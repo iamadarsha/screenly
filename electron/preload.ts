@@ -782,6 +782,24 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("whisper-small-model-download-progress", listener);
 		return () => ipcRenderer.removeListener("whisper-small-model-download-progress", listener);
 	},
+	getAiModelStatus: () => {
+		return ipcRenderer.invoke("get-ai-model-status");
+	},
+	downloadAiModel: () => {
+		return ipcRenderer.invoke("download-ai-model");
+	},
+	cancelAiModelDownload: () => {
+		return ipcRenderer.invoke("cancel-ai-model-download");
+	},
+	deleteAiModel: () => {
+		return ipcRenderer.invoke("delete-ai-model");
+	},
+	onAiModelDownloadProgress: (callback: (state: { progress: number }) => void) => {
+		const listener = (_event: Electron.IpcRendererEvent, payload: { progress: number }) =>
+			callback(payload);
+		ipcRenderer.on("ai-model-download-progress", listener);
+		return () => ipcRenderer.removeListener("ai-model-download-progress", listener);
+	},
 	generateAutoCaptions: (options: {
 		videoPath: string;
 		whisperExecutablePath?: string;

@@ -31,8 +31,11 @@ import { useI18n, useScopedT } from "../../contexts/I18nContext";
 import type { AppLocale } from "../../i18n/config";
 import { SUPPORTED_LOCALES } from "../../i18n/config";
 import { AnnotationSettingsPanel } from "./AnnotationSettingsPanel";
+import type { CaptionEditTarget } from "./captionEditing";
 import CaptionListPanel from "./CaptionListPanel";
 import type { CaptionRetimeSpan } from "./captionOps";
+import { AiToolsPanel } from "./AiToolsPanel";
+import { TranscriptPanel } from "./TranscriptPanel";
 import {
 	CURSOR_MOTION_PRESETS,
 	type CursorMotionPresetId,
@@ -559,6 +562,7 @@ interface SettingsPanelProps {
 	onCaptionSplit?: (id: string, atMs: number) => void;
 	onCaptionMerge?: (idA: string, idB: string) => void;
 	onCaptionDelete?: (id: string) => void;
+	onDeleteTranscriptWordRange?: (target: CaptionEditTarget) => void;
 	nativeCaptureUnavailableSession?: boolean;
 	onOpenNativeCaptureUnavailableModal?: () => void;
 }
@@ -1006,6 +1010,7 @@ export function SettingsPanel({
 	onCaptionSplit,
 	onCaptionMerge,
 	onCaptionDelete,
+	onDeleteTranscriptWordRange,
 	nativeCaptureUnavailableSession = false,
 	onOpenNativeCaptureUnavailableModal,
 }: SettingsPanelProps) {
@@ -2049,6 +2054,16 @@ export function SettingsPanel({
 						</SelectContent>
 					</Select>
 				</div>
+				{autoCaptionSettings.detectedLanguage && (
+					<p className="text-xs text-muted-foreground">
+						{tSettings("captions.detectedLanguage", "Detected language: {{language}}", {
+							language:
+								CAPTION_LANGUAGE_OPTIONS.find(
+									(option) => option.value === autoCaptionSettings.detectedLanguage,
+								)?.label ?? autoCaptionSettings.detectedLanguage,
+						})}
+					</p>
+				)}
 				<div className="flex items-center justify-between gap-3">
 					<div className="text-sm font-medium text-foreground">
 						{tSettings("captions.animation", "Animation")}
@@ -2252,6 +2267,18 @@ export function SettingsPanel({
 					/>
 				)}
 			</div>
+			{onDeleteTranscriptWordRange && (
+				<div className="flex flex-col gap-1.5">
+					<div className="mb-1 text-sm font-medium text-foreground">
+						{tSettings("captions.transcript.title", "Transcript")}
+					</div>
+					<TranscriptPanel
+						cues={autoCaptions}
+						onDeleteWordRange={onDeleteTranscriptWordRange}
+					/>
+				</div>
+			)}
+			{autoCaptions.length > 0 && <AiToolsPanel cues={autoCaptions} />}
 		</section>
 	);
 

@@ -172,6 +172,7 @@
 		"enabled": "Показать",
 		"timelineQuickAdd": "Наведите курсор, чтобы добавить на таймлайн",
 		"language": "Язык",
+		"detectedLanguage": "Определён язык: {{language}}",
 		"downloading": "Загрузка...",
 		"deleteModel": "Удалить модель",
 		"clearModel": "Очистить модель",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "Расшифровка",
+			"empty": "Расшифровки пока нет — сначала создайте субтитры.",
+			"fillerWord": "Слово-паразит",
+			"repeatedPhrase": "Возможная запинка",
+			"possibleFalseStarts": "Возможные запинки",
+			"removeRepeat": "Удалить повтор",
+			"wordsSelected": "Выбрано слов: {{count}}",
+			"selectHint": "Нажмите на слово или Shift+клик, чтобы выбрать диапазон.",
+			"deleteSelection": "Удалить и сдвинуть"
 		}
 	},
 	"crop": {

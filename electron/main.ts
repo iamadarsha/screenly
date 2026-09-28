@@ -1,7 +1,9 @@
+import { loadElectronLlm } from "@electron/llm";
 import { clearRecordingTrashUndo } from "./ipc/recording/library";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { GEMMA4_E4B_MODEL_ALIAS, GEMMA4_E4B_MODEL_PATH } from "./ipc/constants";
 import {
 	app,
 	BrowserWindow,
@@ -1025,6 +1027,20 @@ app.whenReady().then(async () => {
 			console.warn("[media-server] Failed to start media server:", error);
 		}),
 	]);
+
+	// Load the optional local reasoning model (Phase 4C). Must run before any window is
+	// created so `window.electronAi` is available in every renderer. A missing/undownloaded
+	// model is not an error here — `getModelPath` returning the (possibly nonexistent) path
+	// just means every AI feature falls back to its deterministic heuristic, per the PRD's
+	// "AI must not block the recorder" / graceful-degradation rule.
+	try {
+		await loadElectronLlm({
+			getModelPath: (modelAlias) =>
+				modelAlias === GEMMA4_E4B_MODEL_ALIAS ? GEMMA4_E4B_MODEL_PATH : null,
+		});
+	} catch (error) {
+		console.warn("[ai] Failed to load local reasoning model module:", error);
+	}
 
 	registerIpcHandlers(
 		createEditorWindowWrapper,

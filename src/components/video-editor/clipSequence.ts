@@ -1,3 +1,4 @@
+import { planClipSplit } from "./clipSplit";
 import { type ClipRegion, getClipSourceStartMs, sortClipRegions } from "./types";
 
 /** Primary footage is a sequence. Source in-points survive every ripple edit. */
@@ -75,6 +76,48 @@ export function mapClipSequenceTime(
 		(clip) => clip.startMs >= time && after.some((nextClip) => nextClip.id === clip.id),
 	);
 	return following ? after.find((clip) => clip.id === following.id)!.startMs : afterEnd;
+}
+
+function splitClipsAt(clips: ClipRegion[], atMs: number, createId: () => string): ClipRegion[] {
+	const plan = planClipSplit({ clipRegions: clips, splitMs: atMs, createId });
+	if (!plan) return clips;
+	return clips.flatMap((clip) => (clip.id === plan.targetId ? [plan.left, plan.right] : [clip]));
+}
+
+export interface TimeRangeDeletionPlan {
+	/** Clips split at both cut boundaries, before the cut range is removed — matches the id
+	 * space `rippleRegions`'s `before` argument needs, since a plain split never moves anything. */
+	splitClips: ClipRegion[];
+	/** The final, repacked clip sequence with the cut range removed and the gap closed. */
+	nextClips: ClipRegion[];
+}
+
+/**
+ * Plans removing `[startMs, endMs)` from the timeline: splits any clip
+ * straddling either boundary so the cut aligns exactly with clip edges,
+ * drops whatever ends up fully inside the range, and repacks the rest with
+ * `packClipSequence`. Returns both the post-split/pre-delete array and the
+ * final array so the caller can ripple every other region type (zoom,
+ * annotation, audio, captions) through the same edit via `rippleRegions`.
+ */
+export function planTimeRangeDeletion(params: {
+	clipRegions: ClipRegion[];
+	startMs: number;
+	endMs: number;
+	createId: () => string;
+}): TimeRangeDeletionPlan | null {
+	const { clipRegions, startMs, endMs, createId } = params;
+	if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+		return null;
+	}
+
+	let splitClips = splitClipsAt(sortClipRegions(clipRegions), startMs, createId);
+	splitClips = splitClipsAt(splitClips, endMs, createId);
+
+	const remaining = splitClips.filter((clip) => !(clip.startMs >= startMs && clip.endMs <= endMs));
+	const nextClips = packClipSequence(sortClipRegions(remaining));
+
+	return { splitClips, nextClips };
 }
 
 /** Imported audio keeps its duration while its timeline anchor follows the edit. */

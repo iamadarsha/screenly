@@ -602,7 +602,10 @@ export interface AutoCaptionSettings {
 	enabled: boolean;
 	/** Show the hover ghost on the timeline caption track for click-to-add. */
 	timelineQuickAdd: boolean;
+	/** Input hint passed to Whisper's `-l` flag (e.g. "auto", "en"), not a detection result. */
 	language: string;
+	/** Whisper's own detected/effective language from the most recent generation run, if reported. */
+	detectedLanguage?: string;
 	fontFamily: string;
 	fontSize: number;
 	bottomOffset: number;

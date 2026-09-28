@@ -237,6 +237,7 @@ export function registerCaptionHandlers() {
 				return {
 					success: true,
 					cues: result.cues,
+					detectedLanguage: result.detectedLanguage,
 					message:
 						result.audioSourceLabel === "recording"
 							? `Generated ${result.cues.length} caption cues.`

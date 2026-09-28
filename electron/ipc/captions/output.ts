@@ -10,9 +10,10 @@ export async function readWhisperCaptionOutput(outputBase: string, jsonEnabled: 
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 		}
-		const timed = json ? parseWhisperJsonCues(json) : [];
-		if (timed.length) return timed;
+		const parsed = json ? parseWhisperJsonCues(json) : { cues: [] };
+		if (parsed.cues.length) return parsed;
 		console.warn("[auto-captions] No usable JSON timing output; falling back to SRT.");
 	}
-	return parseSrtCues(await fs.readFile(`${outputBase}.srt`, "utf8"));
+	// SRT carries no language metadata, so this path never yields a detectedLanguage.
+	return { cues: parseSrtCues(await fs.readFile(`${outputBase}.srt`, "utf8")) };
 }

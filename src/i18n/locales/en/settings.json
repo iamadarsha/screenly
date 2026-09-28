@@ -178,6 +178,7 @@
 		"enabled": "Show",
 		"timelineQuickAdd": "Hover to add on timeline",
 		"language": "Language",
+		"detectedLanguage": "Detected language: {{language}}",
 		"downloading": "Downloading...",
 		"deleteModel": "Delete Model",
 		"clearModel": "Clear Model",
@@ -208,6 +209,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "Transcript",
+			"empty": "No transcript yet — generate captions first.",
+			"fillerWord": "Filler word",
+			"repeatedPhrase": "Possible false start",
+			"possibleFalseStarts": "Possible false starts",
+			"removeRepeat": "Remove repeat",
+			"wordsSelected": "{{count}} word(s) selected",
+			"selectHint": "Click a word, or shift-click to select a range.",
+			"deleteSelection": "Delete & ripple"
 		}
 	},
 	"crop": {

@@ -217,6 +217,13 @@ interface RendererExportHardwareInfo {
 }
 
 interface Window {
+	/**
+	 * Auto-injected by `@electron/llm`'s `loadElectronLlm()` (called once in
+	 * `electron/main.ts`) — undefined if that module failed to load for any
+	 * reason. Every caller must treat this as optional and fall back to a
+	 * deterministic heuristic; never assume it's present.
+	 */
+	electronAi?: import("@electron/llm").ElectronAi;
 	electronAPI: {
 		hudOverlaySetIgnoreMouse: (ignore: boolean) => void;
 		hudOverlaySetSourceSelectionActive: (active: boolean) => void;
@@ -736,6 +743,20 @@ interface Window {
 				error?: string;
 			}) => void,
 		) => () => void;
+		getAiModelStatus: () => Promise<{
+			success: boolean;
+			status: "not-downloaded" | "downloaded" | "corrupted";
+			path: string;
+		}>;
+		downloadAiModel: () => Promise<{
+			success: boolean;
+			path?: string;
+			error?: string;
+			cancelled?: boolean;
+		}>;
+		cancelAiModelDownload: () => Promise<{ success: boolean }>;
+		deleteAiModel: () => Promise<{ success: boolean }>;
+		onAiModelDownloadProgress: (callback: (state: { progress: number }) => void) => () => void;
 		generateAutoCaptions: (options: {
 			videoPath: string;
 			whisperExecutablePath?: string;
@@ -744,6 +765,7 @@ interface Window {
 		}) => Promise<{
 			success: boolean;
 			cues?: AutoCaptionCue[];
+			detectedLanguage?: string;
 			message?: string;
 			error?: string;
 		}>;

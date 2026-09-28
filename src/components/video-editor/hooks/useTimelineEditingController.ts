@@ -4,9 +4,11 @@ import { toast } from "@/components/ui/toast";
 import type { useI18n } from "@/contexts/I18nContext";
 import type { useShortcuts } from "@/contexts/ShortcutsContext";
 import { useVideoEditorAudio } from "../audio/useVideoEditorAudio";
+import type { CaptionEditTarget } from "../captionEditing";
 import type { useAppearanceState } from "../state/useAppearanceState";
 import type { useTimelineState } from "../state/useTimelineState";
 import type { TimelineEditorHandle } from "../timeline/TimelineEditor";
+import { deleteTranscriptWordRange } from "../transcriptEditing";
 import type { EditorEffectSection } from "../types";
 import type { VideoPlaybackRef } from "../VideoPlayback";
 import { getErrorMessage, summarizeErrorMessage } from "../videoEditorUtils";
@@ -213,6 +215,46 @@ export function useTimelineEditingController(input: Input) {
 		nextAnnotationZIndexRef: input.nextAnnotationZIndexRef,
 	});
 
+	const handleDeleteTranscriptWordRange = useCallback(
+		(target: CaptionEditTarget) => {
+			const result = deleteTranscriptWordRange({
+				target,
+				autoCaptions: timeline.autoCaptions,
+				clipRegions: timeline.clipRegions,
+				zoomRegions: timeline.zoomRegions,
+				annotationRegions: timeline.annotationRegions,
+				audioRegions: timeline.audioRegions,
+				createClipId: () => `clip-${input.nextClipIdRef.current++}`,
+			});
+			if (!result) {
+				toast.info("Nothing to delete.");
+				return;
+			}
+			// All five setters fire in this one handler, so the whole-project history
+			// snapshot records exactly one undo step for the entire delete-to-cut.
+			timeline.setClipRegions(result.clipRegions);
+			timeline.setAutoCaptions(result.autoCaptions);
+			timeline.setZoomRegions(result.zoomRegions);
+			timeline.setAnnotationRegions(result.annotationRegions);
+			timeline.setAudioRegions(result.audioRegions);
+			timeline.setSelectedCaptionId(null);
+		},
+		[
+			timeline.autoCaptions,
+			timeline.clipRegions,
+			timeline.zoomRegions,
+			timeline.annotationRegions,
+			timeline.audioRegions,
+			timeline.setClipRegions,
+			timeline.setAutoCaptions,
+			timeline.setZoomRegions,
+			timeline.setAnnotationRegions,
+			timeline.setAudioRegions,
+			timeline.setSelectedCaptionId,
+			input.nextClipIdRef,
+		],
+	);
+
 	useEditorGlobalInteractions({
 		timeline,
 		videoPlaybackRef: input.videoPlaybackRef,
@@ -235,5 +277,6 @@ export function useTimelineEditingController(input: Input) {
 		annotationCommands,
 		handleSelectAnnotation,
 		handleAutoSuggestZoomsConsumed: freshZoom.handleAutoSuggestZoomsConsumed,
+		handleDeleteTranscriptWordRange,
 	};
 }

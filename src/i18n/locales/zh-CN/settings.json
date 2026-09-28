@@ -172,6 +172,7 @@
 		"enabled": "显示",
 		"timelineQuickAdd": "悬停以在时间轴上添加",
 		"language": "语言",
+		"detectedLanguage": "检测到的语言：{{language}}",
 		"downloading": "下载中...",
 		"deleteModel": "删除模型",
 		"clearModel": "清除模型",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "文字记录",
+			"empty": "暂无文字记录 — 请先生成字幕。",
+			"fillerWord": "口头禅词",
+			"repeatedPhrase": "可能的重复口误",
+			"possibleFalseStarts": "可能的重复口误",
+			"removeRepeat": "移除重复",
+			"wordsSelected": "已选择 {{count}} 个词",
+			"selectHint": "点击单词，或按住 Shift 点击以选择范围。",
+			"deleteSelection": "删除并顺移"
 		}
 	},
 	"crop": {

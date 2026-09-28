@@ -172,6 +172,7 @@
 		"enabled": "顯示",
 		"timelineQuickAdd": "懸停以在時間軸上新增",
 		"language": "語言",
+		"detectedLanguage": "偵測到的語言：{{language}}",
 		"downloading": "下載中...",
 		"deleteModel": "刪除模型",
 		"clearModel": "清除模型",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "逐字稿",
+			"empty": "尚無逐字稿 — 請先產生字幕。",
+			"fillerWord": "口頭禪詞",
+			"repeatedPhrase": "可能的重複口誤",
+			"possibleFalseStarts": "可能的重複口誤",
+			"removeRepeat": "移除重複",
+			"wordsSelected": "已選取 {{count}} 個字詞",
+			"selectHint": "點選字詞，或按住 Shift 點選以選取範圍。",
+			"deleteSelection": "刪除並順移"
 		}
 	},
 	"crop": {

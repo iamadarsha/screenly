@@ -298,7 +298,7 @@ async function generateCaptionsForSource(options: {
 			await executeWhisper(whisperExecutablePath, whisperBaseArgs);
 		}
 
-		const cues = await readWhisperCaptionOutput(outputBase, jsonEnabled);
+		const { cues, detectedLanguage } = await readWhisperCaptionOutput(outputBase, jsonEnabled);
 
 		// Whisper cues run sentences together and don't break on pauses. Re-segment them
 		// into one caption per sentence/phrase using Whisper's own word stream (punctuation
@@ -321,6 +321,7 @@ async function generateCaptionsForSource(options: {
 		return {
 			cues: cuesToReturn,
 			audioSourceLabel: audioSource.label,
+			detectedLanguage,
 		};
 	} finally {
 		await Promise.allSettled([
@@ -350,18 +351,21 @@ export async function generateAutoCaptionsFromVideo(options: {
 	// sidecar replaces embedded system audio to avoid transcribing it twice.
 	const transcribeTrack = async (sources: CaptionAudioCandidate[]) => {
 		try {
-			return (await generateCaptionsForSource({ ...options, candidates: sources })).cues;
+			return await generateCaptionsForSource({ ...options, candidates: sources });
 		} catch (error) {
 			if (!(error instanceof NoCaptionAudioError)) throw error;
 			return null;
 		}
 	};
-	const micCues = await transcribeTrack(microphone);
-	const systemCues = await transcribeTrack([...system, ...secondary]);
-	if (micCues === null && systemCues === null)
+	const micResult = await transcribeTrack(microphone);
+	const systemResult = await transcribeTrack([...system, ...secondary]);
+	if (micResult === null && systemResult === null)
 		throw new NoCaptionAudioError("No audio could be extracted from the recording.");
 	return {
-		cues: mergeCaptionSources(micCues ?? [], systemCues ?? []),
+		cues: mergeCaptionSources(micResult?.cues ?? [], systemResult?.cues ?? []),
 		audioSourceLabel: "microphone and system audio",
+		// The narrator's own voice (mic) is the more reliable signal for spoken language
+		// than incidental system/app audio, so it wins when both tracks report one.
+		detectedLanguage: micResult?.detectedLanguage ?? systemResult?.detectedLanguage,
 	};
 }

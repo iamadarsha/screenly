@@ -10,7 +10,7 @@ export interface CaptionRetimeSpan {
 	endMs: number;
 }
 
-function sortCaptionCues(cues: CaptionCue[]): CaptionCue[] {
+export function sortCaptionCues(cues: CaptionCue[]): CaptionCue[] {
 	return [...cues].sort(
 		(left, right) => left.startMs - right.startMs || left.endMs - right.endMs,
 	);

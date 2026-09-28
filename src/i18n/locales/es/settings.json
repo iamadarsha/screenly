@@ -172,6 +172,7 @@
 		"enabled": "Mostrar",
 		"timelineQuickAdd": "Pasar el cursor para añadir en la línea de tiempo",
 		"language": "Idioma",
+		"detectedLanguage": "Idioma detectado: {{language}}",
 		"downloading": "Descargando...",
 		"deleteModel": "Eliminar modelo",
 		"clearModel": "Borrar modelo",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "Transcripción",
+			"empty": "Aún no hay transcripción; genera subtítulos primero.",
+			"fillerWord": "Muletilla",
+			"repeatedPhrase": "Posible tropiezo",
+			"possibleFalseStarts": "Posibles tropiezos",
+			"removeRepeat": "Quitar repetición",
+			"wordsSelected": "{{count}} palabra(s) seleccionada(s)",
+			"selectHint": "Haz clic en una palabra, o mayús+clic para seleccionar un rango.",
+			"deleteSelection": "Eliminar y ajustar"
 		}
 	},
 	"crop": {

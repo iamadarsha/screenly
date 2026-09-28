@@ -28,7 +28,7 @@ it("keeps both tracks, choosing mic only for overlapping words", () => {
 	]);
 });
 it("retains real Whisper word timing through control tokens and punctuation", () => {
-	const cues = parseWhisperJsonCues(
+	const { cues } = parseWhisperJsonCues(
 		JSON.stringify({
 			transcription: [
 				{
@@ -45,6 +45,25 @@ it("retains real Whisper word timing through control tokens and punctuation", ()
 		}),
 	);
 	expect(cues[0].words).toEqual([{ text: "Hello.", startMs: 0, endMs: 900 }]);
+});
+
+it("extracts the detected language from the result block, when present", () => {
+	const { detectedLanguage } = parseWhisperJsonCues(
+		JSON.stringify({
+			result: { language: "en" },
+			transcription: [{ offsets: { from: 0, to: 1000 }, text: "Hello." }],
+		}),
+	);
+	expect(detectedLanguage).toBe("en");
+});
+
+it("leaves detectedLanguage undefined when the result block is absent", () => {
+	const { detectedLanguage } = parseWhisperJsonCues(
+		JSON.stringify({
+			transcription: [{ offsets: { from: 0, to: 1000 }, text: "Hello." }],
+		}),
+	);
+	expect(detectedLanguage).toBeUndefined();
 });
 
 it("does not let mic sound labels replace system speech", () => {

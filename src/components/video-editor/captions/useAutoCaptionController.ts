@@ -2,6 +2,7 @@ import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef } fr
 import { toast } from "@/components/ui/toast";
 import { resolveAutoCaptionSourcePath } from "../autoCaptionSource";
 import { type CaptionEditTarget, updateCaptionCuesForEditedTarget } from "../captionEditing";
+import { sanitizeCaptionCues } from "../captionValidation";
 import { resolveVideoUrl } from "../projectPersistence";
 import type { AutoCaptionSettings, CaptionCue } from "../types";
 import { getErrorMessage } from "../videoEditorUtils";
@@ -203,11 +204,19 @@ export function useAutoCaptionController({
 				toast.error(errorMessage || "Failed to generate captions");
 				return;
 			}
-			setAutoCaptions(result.cues);
-			if (result.cues.length > 0) {
-				setAutoCaptionSettings((current) => ({ ...current, enabled: true }));
+			// Whisper JSON parsing is defensive but not infallible — drop any cue with an
+			// invalid duration rather than letting corrupt ASR output reach project state.
+			// `0` skips the video-duration clamp (not known here); it still drops bad cues.
+			const sanitizedCues = sanitizeCaptionCues(result.cues, 0);
+			setAutoCaptions(sanitizedCues);
+			if (sanitizedCues.length > 0) {
+				setAutoCaptionSettings((current) => ({
+					...current,
+					enabled: true,
+					...(result.detectedLanguage ? { detectedLanguage: result.detectedLanguage } : {}),
+				}));
 			}
-			toast.success(result.message || `Generated ${result.cues.length} captions`);
+			toast.success(result.message || `Generated ${sanitizedCues.length} captions`);
 		} catch (error) {
 			toast.error(getErrorMessage(error));
 		} finally {

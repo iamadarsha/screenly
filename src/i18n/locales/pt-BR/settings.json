@@ -172,6 +172,7 @@
 		"enabled": "Mostrar",
 		"timelineQuickAdd": "Passe o cursor para adicionar na linha do tempo",
 		"language": "Idioma",
+		"detectedLanguage": "Idioma detectado: {{language}}",
 		"downloading": "Baixando...",
 		"deleteModel": "Excluir modelo",
 		"clearModel": "Limpar modelo",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "Transcrição",
+			"empty": "Ainda não há transcrição — gere as legendas primeiro.",
+			"fillerWord": "Palavra de preenchimento",
+			"repeatedPhrase": "Possível hesitação",
+			"possibleFalseStarts": "Possíveis hesitações",
+			"removeRepeat": "Remover repetição",
+			"wordsSelected": "{{count}} palavra(s) selecionada(s)",
+			"selectHint": "Clique em uma palavra, ou shift+clique para selecionar um intervalo.",
+			"deleteSelection": "Excluir e ajustar"
 		}
 	},
 	"crop": {

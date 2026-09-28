@@ -35,6 +35,8 @@ import type { useTimelineProjection } from "../hooks/useTimelineProjection";
 import type { useZoomRegionCommands } from "../hooks/useZoomRegionCommands";
 import type { useAppearanceState } from "../state/useAppearanceState";
 import type { useTimelineState } from "../state/useTimelineState";
+import { PresentationSuggestionsPanel } from "../suggestions/PresentationSuggestionsPanel";
+import { usePresentationSuggestionsReview } from "../suggestions/usePresentationSuggestionsReview";
 import type { TimelineEditorHandle } from "../timeline/TimelineEditor";
 import type { VideoPlaybackRef } from "../VideoPlayback";
 import { EditorVideoPreview } from "./EditorVideoPreview";
@@ -116,6 +118,16 @@ export function EditorPreviewPanel(props: Props) {
 		setIsPlaying,
 		setError,
 	} = props;
+
+	const presentationSuggestions = usePresentationSuggestionsReview({
+		cursorTelemetry: effectiveCursorTelemetry,
+		totalMs: Math.round(projection.timelineDuration * 1000),
+		reservedZoomSpans: projection.effectiveZoomRegions
+			.map((region) => ({ start: region.startMs, end: region.endMs }))
+			.sort((a, b) => a.start - b.start),
+		onAcceptZoom: zoomCommands.handleZoomSuggested,
+		onPreview: (startMs) => playback.handleSeek(startMs / 1000, { pause: true }),
+	});
 
 	return (
 		<div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -289,6 +301,10 @@ export function EditorPreviewPanel(props: Props) {
 					>
 						<MagicWand className="h-4 w-4" />
 					</Button>
+					<PresentationSuggestionsPanel
+						review={presentationSuggestions}
+						triggerTitle="Make This Recording Look Better"
+					/>
 					<Button
 						onClick={() => timelineRef.current?.splitClip()}
 						variant="ghost"

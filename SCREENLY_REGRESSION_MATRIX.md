@@ -1,5 +1,25 @@
 # SCREENLY Regression Matrix
 
+## Status as of 2026-09-27, Phase 2 full-pipeline regression gate (PRD §25 gate)
+
+Real signed app (`release/mac-arm64/Screenly.app`, code unchanged since `61fbb39`/`f8e8846` — no rebuild needed), driven via CDP (`--remote-debugging-port=9333 --remote-allow-origins=*`) against the actual HUD/editor renderer contexts, not mocks.
+
+| Check | Status | Notes |
+|---|---|---|
+| Source selection → `startNativeScreenRecording` (ScreenCaptureKit) | ✅ VERIFIED live | real backend, real source |
+| Recording Guardian checkpoint | ✅ VERIFIED live | `recording-*.screenly-checkpoint.json` created with correct fields on `setRecordingState(true)`, deleted cleanly on stop |
+| Media-health monitor | ✅ VERIFIED live | `get-media-health-status` returned `{"status":"ok"}` mid-recording |
+| Pause / resume | ✅ VERIFIED live | real pause/resume via `setRecordingState`, no false stall reading afterward |
+| Stop → real output file | ✅ VERIFIED live | `recording-1790450829129.mp4`, 16,303,446 bytes, 44.905s confirmed via ffprobe; checkpoint file removed |
+| Editor load (`switchToEditor`) | ✅ VERIFIED live | editor window opened with the real video, correct `<video>` src, correct project title |
+| Export (MP4, real encode) | ✅ VERIFIED live | clicked through Export → Export Video panel via DOM-scoped clicks; output landed at `~/Downloads/export-*.mp4` (no blocking native dialog observed — confirmed via a safe activate+screenshot check, not a coordinate click); ffprobe confirmed valid h264, 1814×1020, 44.934s, 9.4MB |
+| Retake Mode against the real clip in this project | ⬜ NOT RE-VERIFIED LIVE | Editor window stopped exposing a CDP target partway through the session (`Target.getTargets` on the browser endpoint only returned the HUD window, even though the editor window was visibly open and functional per screenshot) — a CDP/tooling gap, not a reproduced app bug. Did not fall back to blind coordinate-clicking (ruled out earlier this session after a real misclick incident). Backed instead by: 10 passing `retake.test.ts` unit tests (unchanged) + this session's earlier CDP-verified cross-window handoff mechanism (see below). |
+| Test artifacts cleanup | ✅ DONE | deleted the test export, test recording + `.cursor.json` sidecar, and the test `.recordly` project file from the real app-data dir; killed the debug-mode app instance |
+
+**Result: the continuous record→pause→resume→stop→edit→export chain is now confirmed working end-to-end on the real signed app. Retake-mode is the one PRD §25 item not re-driven live this pass**, for the tooling reason above rather than any observed defect.
+
+**Also found in passing (not part of this gate, spun off separately):** saved project files still use the `.recordly` file extension — a Phase 1 branding-cleanup miss, tracked as a separate follow-up task.
+
 ## Status as of 2026-09-27, Phase 2 session (inline retake-recording — Phase 2 now feature-complete)
 
 | Check | Status | Notes |

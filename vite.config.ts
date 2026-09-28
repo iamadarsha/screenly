@@ -73,7 +73,23 @@ export default defineConfig(({ mode }) => ({
 										fileName: (_format, entryName) => `${entryName}.cjs`,
 									},
 									rollupOptions: {
-										external: ["ffmpeg-static", "uiohook-napi"],
+										// @electron/llm and node-llama-cpp must stay external like the other
+										// native-binding-dependent packages (uiohook-napi): @electron/llm
+										// resolves its own preload script's real file path at runtime to hand
+										// to Electron's session.setPreloads(), and node-llama-cpp loads
+										// prebuilt native bindings relative to its own package location.
+										// Bundling either inline breaks those runtime path lookups — the
+										// preload script silently ends up executing inside the bundled
+										// main.cjs itself instead of as a real separate preload context,
+										// which crashes on `contextBridge.exposeInMainWorld` (contextBridge
+										// is only defined in an actual preload context) and leaves
+										// `window.electronAi` undefined in every renderer.
+										external: [
+											"ffmpeg-static",
+											"uiohook-napi",
+											"@electron/llm",
+											"node-llama-cpp",
+										],
 										output: {
 											format: "cjs",
 											inlineDynamicImports: true,

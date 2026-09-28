@@ -19,15 +19,17 @@ it.each([
 	'{"transcription":[]}',
 ])("uses SRT when JSON is unusable: %s", async (json) => {
 	if (json !== undefined) await fs.writeFile(`${output}.json`, json);
-	const cues = await readWhisperCaptionOutput(output, true);
-	expect(cues).toEqual([
+	const result = await readWhisperCaptionOutput(output, true);
+	expect(result.cues).toEqual([
 		{ id: "caption-1", startMs: 1200, endMs: 2400, text: "Fallback speech" },
 	]);
+	expect(result.detectedLanguage).toBeUndefined();
 });
 it("prefers valid JSON word timing", async () => {
 	await fs.writeFile(
 		`${output}.json`,
 		JSON.stringify({
+			result: { language: "en" },
 			transcription: [
 				{
 					offsets: { from: 1200, to: 2400 },
@@ -40,10 +42,11 @@ it("prefers valid JSON word timing", async () => {
 			],
 		}),
 	);
-	const cues = await readWhisperCaptionOutput(output, true);
-	expect(cues[0].text).toBe("Timed speech");
-	expect(cues[0].words).toHaveLength(2);
-	expect(cues[0].words?.[1].startMs).toBe(1800);
+	const result = await readWhisperCaptionOutput(output, true);
+	expect(result.cues[0].text).toBe("Timed speech");
+	expect(result.cues[0].words).toHaveLength(2);
+	expect(result.cues[0].words?.[1].startMs).toBe(1800);
+	expect(result.detectedLanguage).toBe("en");
 });
 it("still surfaces missing subtitle output", async () => {
 	await fs.rm(`${output}.srt`);

@@ -172,6 +172,7 @@
 		"enabled": "Tonen",
 		"timelineQuickAdd": "Aanwijzen om toe te voegen op tijdlijn",
 		"language": "Taal",
+		"detectedLanguage": "Gedetecteerde taal: {{language}}",
 		"downloading": "Downloaden...",
 		"deleteModel": "Model verwijderen",
 		"clearModel": "Model wissen",
@@ -202,6 +203,17 @@
 			"split": "Split",
 			"merge": "Merge",
 			"delete": "Delete"
+		},
+		"transcript": {
+			"title": "Transcript",
+			"empty": "Nog geen transcript — genereer eerst bijschriften.",
+			"fillerWord": "Stopwoord",
+			"repeatedPhrase": "Mogelijke misser",
+			"possibleFalseStarts": "Mogelijke missers",
+			"removeRepeat": "Herhaling verwijderen",
+			"wordsSelected": "{{count}} woord(en) geselecteerd",
+			"selectHint": "Klik op een woord, of shift-klik om een bereik te selecteren.",
+			"deleteSelection": "Verwijderen & aanpassen"
 		}
 	},
 	"crop": {

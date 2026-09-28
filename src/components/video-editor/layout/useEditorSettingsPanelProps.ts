@@ -2,6 +2,7 @@ import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import type { AspectRatio } from "@/utils/aspectRatioUtils";
 import { useClipAudioReset } from "../audio/useClipAudioReset";
 import type { useAutoCaptionController } from "../captions/useAutoCaptionController";
+import type { CaptionEditTarget } from "../captionEditing";
 import type { useAnnotationRegionCommands } from "../hooks/useAnnotationRegionCommands";
 import type { useAudioRegionCommands } from "../hooks/useAudioRegionCommands";
 import type { useCaptionCommands } from "../hooks/useCaptionCommands";
@@ -21,6 +22,7 @@ type Input = {
 	audioCommands: ReturnType<typeof useAudioRegionCommands>;
 	captionCommands: ReturnType<typeof useCaptionCommands>;
 	annotationCommands: ReturnType<typeof useAnnotationRegionCommands>;
+	handleDeleteTranscriptWordRange: (target: CaptionEditTarget) => void;
 	autoCaptionController: ReturnType<typeof useAutoCaptionController>;
 	effectiveShowCursor: boolean;
 	handleShowCursorChange: (show: boolean) => void;
@@ -49,6 +51,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		audioCommands,
 		captionCommands,
 		annotationCommands,
+		handleDeleteTranscriptWordRange,
 		autoCaptionController,
 		effectiveShowCursor,
 		handleShowCursorChange,
@@ -207,6 +210,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		onCaptionSplit: captionCommands.handleCaptionSplit,
 		onCaptionMerge: captionCommands.handleCaptionMerge,
 		onCaptionDelete: captionCommands.handleCaptionDelete,
+		onDeleteTranscriptWordRange: handleDeleteTranscriptWordRange,
 		onDownloadWhisperSmallModel: autoCaptionController.handleDownloadWhisperSmallModel,
 		onDeleteWhisperSmallModel: autoCaptionController.handleDeleteWhisperSmallModel,
 		nativeCaptureUnavailableSession: sessionNativeCaptureUnavailable,

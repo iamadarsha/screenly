@@ -318,6 +318,7 @@ export default function VideoEditor() {
 		clipCommands,
 		audioCommands,
 		annotationCommands,
+		handleDeleteTranscriptWordRange,
 	} = editing;
 	const { effectiveSpeedRegions, effectiveZoomRegions } = projection;
 
@@ -368,6 +369,7 @@ export default function VideoEditor() {
 		audioCommands,
 		captionCommands,
 		annotationCommands,
+		handleDeleteTranscriptWordRange,
 		autoCaptionController,
 		effectiveShowCursor,
 		handleShowCursorChange,

@@ -14,11 +14,13 @@ import {
 	streamExportBlobToTempFile,
 	writeSmokeExportReport,
 } from "./exportPersistence";
+import { runExportPreflight } from "./exportPreflight";
 import {
 	type ExportRunnerInput,
 	showExportErrorToast,
 	useExportSuccessToast,
 } from "./exportRunnerSupport";
+import { buildSafeExportSettings, isSafeExportSettings } from "./safeExportSettings";
 
 export function useExportRunner(input: ExportRunnerInput) {
 	const inputRef = useRef(input);
@@ -29,6 +31,7 @@ export function useExportRunner(input: ExportRunnerInput) {
 		async (
 			settings: ExportSettings,
 			options?: { destination?: "download" | "share" },
+			isSafeExportRetry = false,
 		): Promise<string | undefined> => {
 			const {
 				videoPath,
@@ -82,6 +85,25 @@ export function useExportRunner(input: ExportRunnerInput) {
 			if (!video) {
 				toast.error("Video not ready");
 				return;
+			}
+
+			if (!isSafeExportRetry && !smokeExportConfig.enabled) {
+				const preflight = await runExportPreflight({
+					video,
+					clipRegions: timeline.clipRegions,
+					settings,
+					hasCaptionPayload: Boolean(captionSidecarPayload),
+					getDiskSpaceStatus: window.electronAPI?.getDiskSpaceStatus,
+				});
+				if (preflight.blockers.length > 0) {
+					const message = preflight.blockers.map((issue) => issue.message).join(" ");
+					setExportError(message);
+					showExportErrorToast(message);
+					return;
+				}
+				for (const warning of preflight.warnings) {
+					toast.warning(warning.message);
+				}
 			}
 
 			const exportRunId = exportRunIdRef.current + 1;
@@ -517,6 +539,21 @@ export function useExportRunner(input: ExportRunnerInput) {
 								metrics: result.metrics,
 							});
 						}
+						if (
+							!isSafeExportRetry &&
+							!smokeExportConfig.enabled &&
+							!exportWasCancelled() &&
+							!isSafeExportSettings(settings)
+						) {
+							toast.info(
+								"The preferred encoder failed. SCREENLY is switching to Safe Export…",
+							);
+							return await handleExport(
+								buildSafeExportSettings(settings),
+								options,
+								true,
+							);
+						}
 						setExportError(result.error || "Export failed");
 						showExportErrorToast(result.error || "Export failed");
 						keepExportDialogOpen = options?.destination !== "share";
@@ -547,6 +584,15 @@ export function useExportRunner(input: ExportRunnerInput) {
 								: undefined,
 						error: errorMessage,
 					});
+				}
+				if (
+					!isSafeExportRetry &&
+					!smokeExportConfig.enabled &&
+					settings.format === "mp4" &&
+					!isSafeExportSettings(settings)
+				) {
+					toast.info("The preferred encoder failed. SCREENLY is switching to Safe Export…");
+					return await handleExport(buildSafeExportSettings(settings), options, true);
 				}
 				setExportError(errorMessage);
 				showExportErrorToast(`Export failed: ${errorMessage}`);

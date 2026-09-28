@@ -222,3 +222,7 @@ export type WhisperJsonSegment = {
 	};
 	tokens?: unknown;
 };
+
+export type WhisperJsonResult = {
+	language?: unknown;
+};
