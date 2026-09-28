@@ -37,7 +37,8 @@ function isValidTranslation(data: unknown): data is { translations: Array<{ id: 
 		(item) =>
 			typeof item === "object" && item !== null &&
 			"id" in item && "text" in item &&
-			typeof item.id === "string" && typeof item.text === "string",
+			(typeof item.id === "string" || typeof item.id === "number") &&
+			typeof item.text === "string",
 	);
 }
 
@@ -75,8 +76,14 @@ export async function translateCaptionsWithAi(
 		return { status: "unavailable", reason: "No transcript text available to translate." };
 	}
 
-	// Build a compact JSON representation of cues for the prompt
-	const cueList = cues.map((c) => ({ id: c.id, text: c.text }));
+	// The model is asked to echo back each cue's id, but real cue ids are opaque
+	// generated strings that a small local model does not reliably reproduce exactly
+	// (it may shorten, reformat or drop characters). Use small positional indices in
+	// the prompt instead and map the response back to the real ids by array position —
+	// this is what the model actually gets right, id-matching was the reason large,
+	// perfectly-translatable transcripts were failing validation and reporting
+	// "unavailable" even with the model present and working.
+	const cueList = cues.map((c, index) => ({ id: String(index), text: c.text }));
 
 	const langLabel = TRANSLATION_TARGETS.find((t) => t.code === targetLanguage)?.label ?? targetLanguage;
 
@@ -93,12 +100,18 @@ export async function translateCaptionsWithAi(
 	});
 
 	if (result.ok) {
-		const known = new Map(cues.map((cue) => [cue.id, cue.text]));
-		const translated = new Map<string, string>();
+		const translated = new Map<number, string>();
 		for (const item of result.data.translations) {
+			const index = Number(item.id);
 			const text = item.text.trim();
-			if (known.has(item.id) && text.length > 0 && text.length <= known.get(item.id)!.length * 6 + 40) {
-				translated.set(item.id, text);
+			if (
+				Number.isInteger(index) &&
+				index >= 0 &&
+				index < cues.length &&
+				text.length > 0 &&
+				text.length <= cues[index].text.length * 6 + 40
+			) {
+				translated.set(index, text);
 			}
 		}
 		if (translated.size < Math.ceil(cues.length * MIN_TRANSLATION_COVERAGE)) {
@@ -114,9 +127,9 @@ export async function translateCaptionsWithAi(
 				confidence: 0.75,
 				data: {
 					// Cues the model skipped keep their original text so applying never drops captions.
-					translatedCues: cues.map((cue) => ({
+					translatedCues: cues.map((cue, index) => ({
 						id: cue.id,
-						text: translated.get(cue.id) ?? cue.text,
+						text: translated.get(index) ?? cue.text,
 					})),
 					targetLanguage,
 				},
