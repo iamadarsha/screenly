@@ -769,6 +769,44 @@ interface Window {
 		cancelAiModelDownload: () => Promise<{ success: boolean }>;
 		deleteAiModel: () => Promise<{ success: boolean }>;
 		onAiModelDownloadProgress: (callback: (state: { progress: number }) => void) => () => void;
+		getVoiceoverModelStatus: () => Promise<{
+			success: boolean;
+			status: "not-downloaded" | "downloaded" | "corrupted";
+			path: string;
+		}>;
+		downloadVoiceoverModel: () => Promise<{
+			success: boolean;
+			path?: string;
+			error?: string;
+			cancelled?: boolean;
+		}>;
+		cancelVoiceoverModelDownload: () => Promise<{ success: boolean }>;
+		deleteVoiceoverModel: () => Promise<{ success: boolean }>;
+		listVoiceoverVoices: () => Promise<{
+			success: boolean;
+			voices: Array<{
+				id: string;
+				name: string;
+				language: string;
+				gender: "Female" | "Male";
+				grade?: string;
+				traits?: string;
+			}>;
+		}>;
+		generateVoiceover: (options: {
+			text: string;
+			voice?: string;
+			speed?: number;
+		}) => Promise<{
+			success: boolean;
+			audioPath?: string;
+			durationMs?: number;
+			tier?: "kokoro-onnx" | "apple-native-speech" | "system-speech";
+			error?: string;
+		}>;
+		onVoiceoverModelDownloadProgress: (
+			callback: (state: { progress: number }) => void,
+		) => () => void;
 		generateAutoCaptions: (options: {
 			videoPath: string;
 			whisperExecutablePath?: string;

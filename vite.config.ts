@@ -89,6 +89,9 @@ export default defineConfig(({ mode }) => ({
 											"uiohook-napi",
 											"@electron/llm",
 											"node-llama-cpp",
+											"kokoro-js",
+											"@huggingface/transformers",
+											"phonemizer",
 										],
 										output: {
 											format: "cjs",

@@ -36,6 +36,7 @@ import CaptionListPanel from "./CaptionListPanel";
 import type { CaptionRetimeSpan } from "./captionOps";
 import { AiToolsPanel } from "./AiToolsPanel";
 import { TranscriptPanel } from "./TranscriptPanel";
+import { VoiceoverPanel } from "./VoiceoverPanel";
 import {
 	CURSOR_MOTION_PRESETS,
 	type CursorMotionPresetId,
@@ -50,6 +51,7 @@ import { SettingsRow } from "./SettingsRow";
 import type {
 	AnnotationRegion,
 	AnnotationType,
+	AudioRegion,
 	AutoCaptionAnimation,
 	AutoCaptionSettings,
 	CaptionCue,
@@ -452,6 +454,14 @@ interface SettingsPanelProps {
 	onAudioVolumeChange?: (volume: number) => void;
 	onAudioNormalizeChange?: (normalize: boolean) => void;
 	onAudioDelete?: (id: string) => void;
+	onAudioAdded?: (
+		span: { start: number; end: number },
+		audioPath: string,
+		trackIndex?: number,
+	) => void;
+	audioRegions?: AudioRegion[];
+	transcriptCues?: CaptionCue[];
+	currentTimeMs?: number;
 	shadowIntensity?: number;
 	onShadowChange?: (intensity: number) => void;
 	backgroundBlur?: number;
@@ -915,6 +925,10 @@ export function SettingsPanel({
 	onAudioVolumeChange,
 	onAudioNormalizeChange,
 	onAudioDelete,
+	onAudioAdded,
+	audioRegions: _audioRegions,
+	transcriptCues,
+	currentTimeMs,
 	shadowIntensity = 0.67,
 	onShadowChange,
 	backgroundBlur = 0,
@@ -2691,42 +2705,17 @@ export function SettingsPanel({
 		);
 
 		const audioSectionContent = (
-			<section className="flex flex-col gap-3">
-				<div className="flex items-center justify-between gap-3">
-					<SectionLabel>{tSettings("audio.volumeTitle", "Audio")}</SectionLabel>
-					<Button
-						className="text-xs text-muted"
-						size="sm"
-						variant="ghost"
-						type="button"
-						onClick={() => {
-							onAudioVolumeChange?.(1);
-							onAudioNormalizeChange?.(false);
-						}}
-					>
-						{t("common.actions.reset", "Reset")}
-					</Button>
-				</div>
-				<SliderControl
-					label={tSettings("audio.volume", "Volume")}
-					value={selectedAudioVolume ?? 1}
-					min={0}
-					max={1}
-					step={0.01}
-					onChange={(v) => onAudioVolumeChange?.(v)}
-					formatValue={(v) => `${Math.round(v * 100)}%`}
-				/>
-				<div className="flex items-center justify-between py-2">
-					<span className="text-xs text-muted-foreground">
-						{tSettings("audio.normalize", "Normalize")}
-					</span>
-					<Switch
-						aria-label={tSettings("audio.normalize", "Normalize")}
-						checked={Boolean(selectedAudioNormalize)}
-						onCheckedChange={(v) => onAudioNormalizeChange?.(v)}
-					/>
-				</div>
-			</section>
+			<VoiceoverPanel
+				onAudioAdded={onAudioAdded}
+				currentTimeMs={currentTimeMs ?? 0}
+				transcriptCues={transcriptCues ?? autoCaptions ?? []}
+				selectedAudioId={selectedAudioId}
+				selectedAudioVolume={selectedAudioVolume ?? 1}
+				selectedAudioNormalize={Boolean(selectedAudioNormalize)}
+				onAudioVolumeChange={onAudioVolumeChange}
+				onAudioNormalizeChange={onAudioNormalizeChange}
+				onAudioDelete={onAudioDelete}
+			/>
 		);
 
 		const clipSectionContent = (

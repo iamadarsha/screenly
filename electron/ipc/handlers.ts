@@ -1,5 +1,6 @@
 import { BrowserWindow } from "electron";
 import { registerAiModelHandlers } from "./register/aiModel";
+import { registerVoiceoverHandlers } from "./register/voiceover";
 import { registerAnnouncementHandlers } from "./register/announcements";
 import { registerAssetHandlers } from "./register/assets";
 import { registerCaptionHandlers } from "./register/captions";
@@ -75,4 +76,5 @@ export function registerIpcHandlers(
 	registerProjectHandlers();
 	registerSettingsHandlers();
 	registerAiModelHandlers();
+	registerVoiceoverHandlers();
 }

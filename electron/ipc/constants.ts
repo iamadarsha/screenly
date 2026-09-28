@@ -44,6 +44,14 @@ export const GEMMA4_E4B_MODEL_URL =
 export const GEMMA4_E4B_MODEL_SHA256 =
 	"a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2";
 export const GEMMA4_E4B_MODEL_PATH = path.join(AI_MODELS_DIR, "gemma-4-E4B-it-Q4_0.gguf");
+/** Storage directory for generated voiceovers. */
+export const VOICEOVERS_DIR = path.join(USER_DATA_PATH, "voiceovers");
+/** Kokoro-82M ONNX model (quantized q8, ~92 MB) for local zero-cloud voiceover generation. */
+export const KOKORO_TTS_MODEL_URL =
+	"https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model_quantized.onnx";
+export const KOKORO_TTS_MODEL_SHA256 =
+	"fbae9257e1e05ffc727e951ef9b9c98418e6d79f1c9b6b13bd59f5c9028a1478";
+export const KOKORO_TTS_MODEL_PATH = path.join(AI_MODELS_DIR, "kokoro-82m-v1.0-q8.onnx");
 export const COMPANION_AUDIO_LAYOUTS = [
 	{ platform: "mac" as const, systemSuffix: ".system.m4a", micSuffix: ".mic.m4a" },
 	{ platform: "win" as const, systemSuffix: ".system.wav", micSuffix: ".mic.wav" },

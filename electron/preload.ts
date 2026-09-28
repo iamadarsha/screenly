@@ -809,6 +809,30 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("ai-model-download-progress", listener);
 		return () => ipcRenderer.removeListener("ai-model-download-progress", listener);
 	},
+	getVoiceoverModelStatus: () => {
+		return ipcRenderer.invoke("get-voiceover-model-status");
+	},
+	downloadVoiceoverModel: () => {
+		return ipcRenderer.invoke("download-voiceover-model");
+	},
+	cancelVoiceoverModelDownload: () => {
+		return ipcRenderer.invoke("cancel-voiceover-model-download");
+	},
+	deleteVoiceoverModel: () => {
+		return ipcRenderer.invoke("delete-voiceover-model");
+	},
+	listVoiceoverVoices: () => {
+		return ipcRenderer.invoke("list-voiceover-voices");
+	},
+	generateVoiceover: (options: { text: string; voice?: string; speed?: number }) => {
+		return ipcRenderer.invoke("generate-voiceover", options);
+	},
+	onVoiceoverModelDownloadProgress: (callback: (state: { progress: number }) => void) => {
+		const listener = (_event: Electron.IpcRendererEvent, payload: { progress: number }) =>
+			callback(payload);
+		ipcRenderer.on("voiceover-model-download-progress", listener);
+		return () => ipcRenderer.removeListener("voiceover-model-download-progress", listener);
+	},
 	generateAutoCaptions: (options: {
 		videoPath: string;
 		whisperExecutablePath?: string;
