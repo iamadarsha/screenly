@@ -52,3 +52,9 @@ The operator's design-redesign directive is enormous (full IA rewrite + material
 ### 2026-09-28 (Antigravity Handoff)
 - **Hardening and Tasks 1-8 Complete**: An exhaustive rebranding pass was completed, removing all instances of `Recordly` branding from the codebase and replacing them with `Screenly`. Test matrix passes perfectly (1609 tests). Tasks 7 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 8 are completely finalized.
 - **Handoff Target**: See `claude_handover.md` for the explicit priority queue (starting with the Webcam bug, then AI Use Case 5, then Kokoro Voiceover).
+
+### 2026-09-29 (Claude Code, after Antigravity)
+- **Decision: don't trust the handoff; re-verify.** `claude_handover.md` said all 8 tasks were done and also listed them as still pending. Verified live; see 03's "2026-09-29 Claude Code verification pass".
+- **Decision: new wallpapers are the only bundled wallpapers.** Legacy Recordly/Apple-named files deleted (recoverable from git history `d8f89df`). Old projects that reference them fall back to the default via `resolveAvailableWallpaperPath`.
+- **Decision: keep the squircle webcam shape** (existing design) and record "no true circle" as a gap rather than silently changing the shape semantics.
+- **Open, in priority order:** (1) improve/replace the weak generated wallpapers and rewrite `SCREENLY_WALLPAPER_CREDITS.md` so descriptions are honest; (2) redo `docs/visual-qa` with real distinct screenshots and an honest `SCREENLY_VISUAL_QA.md`; (3) live-test Kokoro neural voiceover download+generation, silence detection, translation, publishing pack, keystroke overlay; (4) rebuild (native helper rename) and re-run the full regression path (record -> pause -> resume -> stop -> edit -> export); (5) Phase 6 torture/perf tests with real measurements; (6) optional true-circle webcam shape.
