@@ -1,3 +1,4 @@
+import { setRecordingActive } from "./recordingActiveState";
 import { isHudInEditorMode } from "./hudEditorMode";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -723,6 +724,7 @@ export function reassertHudOverlayMousePassthrough(): void {
 export function setHudOverlayRecordingActive(recording: boolean): void {
 	hudCaptureStarting = false;
 	hudOverlayRecordingActive = Boolean(recording);
+	setRecordingActive(hudOverlayRecordingActive);
 	notifyEditorMode();
 	hudOverlayFallbackExpanded = false;
 	applyHudOverlayBounds();

@@ -96,3 +96,23 @@ describe("voiceoverService", () => {
 		}
 	});
 });
+
+describe("voiceoverService recording-active gating", () => {
+	it("skips Kokoro and falls back to native speech while a recording is active", async () => {
+		vi.resetModules();
+		vi.doMock("./modelManager", async (importOriginal) => {
+			const actual = await importOriginal<typeof import("./modelManager")>();
+			return { ...actual, getModelStatus: vi.fn(async () => "downloaded") };
+		});
+		vi.doMock("../../recordingActiveState", () => ({ isRecordingActive: () => true }));
+		const { generateVoiceoverAudio: generateWhileRecording } = await import("./voiceoverService");
+		const res = await generateWhileRecording({ text: "Hello there" });
+		if (process.platform === "darwin") {
+			expect(res.success).toBe(true);
+			expect(res.tier).toBe("apple-native-speech");
+		}
+		vi.doUnmock("./modelManager");
+		vi.doUnmock("../../recordingActiveState");
+		vi.resetModules();
+	});
+});

@@ -10,6 +10,7 @@ import {
 	KOKORO_TTS_MODEL_URL,
 	VOICEOVERS_DIR,
 } from "../constants";
+import { isRecordingActive } from "../../recordingActiveState";
 import { getFfmpegBinaryPath } from "../ffmpeg/binary";
 import {
 	deleteModel,
@@ -150,9 +151,15 @@ export async function generateVoiceoverAudio(
 	const selectedVoiceId = options.voice || "af_heart";
 	const selectedSpeed = Math.min(1.5, Math.max(0.7, options.speed ?? 1.0));
 
-	// Tier 1: Kokoro ONNX local inference if model is downloaded and ready
+	// Tier 1: Kokoro ONNX local inference if model is downloaded and ready.
+	// Kokoro inference runs synchronously on this (main) process — unlike the Gemma
+	// LLM, which @electron/llm isolates in its own utility process, kokoro-js has no
+	// such isolation available. Skip straight to the fast native-speech fallback while
+	// a recording is active, rather than risk stalling IPC (pause/stop) responsiveness
+	// during CPU-bound ONNX inference. See PRD "AI must not block the recorder" and the
+	// Phase 4 test case "recording during AI processing".
 	const modelStatus = await getModelStatus(KOKORO_MODEL_DESCRIPTOR);
-	if (modelStatus === "downloaded") {
+	if (modelStatus === "downloaded" && !isRecordingActive()) {
 		try {
 			const { KokoroTTS } = await import("kokoro-js");
 			const tts = await KokoroTTS.from_pretrained(KOKORO_TTS_MODEL_PATH, {
