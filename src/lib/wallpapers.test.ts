@@ -17,11 +17,21 @@ describe("wallpapers", () => {
 	});
 
 	it("keeps the curated wallpaper list and default path aligned", () => {
-		expect(DEFAULT_WALLPAPER_PATH).toBe("/wallpapers/tahoe-light.jpg");
-		expect(DEFAULT_WALLPAPER_RELATIVE_PATH).toBe("wallpapers/tahoe-light.jpg");
+		expect(DEFAULT_WALLPAPER_PATH).toBe("/wallpapers/aurora-borealis-polar.jpg");
+		expect(DEFAULT_WALLPAPER_RELATIVE_PATH).toBe("wallpapers/aurora-borealis-polar.jpg");
 		expect(BUILT_IN_WALLPAPERS.at(0)?.publicPath).toBe(DEFAULT_WALLPAPER_PATH);
-		expect(BUILT_IN_WALLPAPERS.at(1)?.publicPath).toBe("/wallpapers/tahoe-dark.jpg");
-		expect(BUILT_IN_WALLPAPERS).toHaveLength(25);
+		expect(BUILT_IN_WALLPAPERS).toHaveLength(24);
+		const categories = new Set(BUILT_IN_WALLPAPERS.map((wallpaper) => wallpaper.category));
+		expect([...categories].sort()).toEqual([
+			"abstract",
+			"alpine",
+			"aurora",
+			"botanical",
+			"coast",
+			"cosmic",
+			"minimal",
+			"topographic",
+		]);
 	});
 
 	it("preserves the curated order when asset discovery returns extra files", async () => {
@@ -30,25 +40,19 @@ describe("wallpapers", () => {
 				listAssetDirectory: vi.fn(async () => ({
 					success: true,
 					files: [
-						"wallpaper1.jpg",
-						"energy-17.jpg",
-						"midnight-8.jpg",
-						"wallpaper4.jpg",
-						"wispysky.mp4",
-						"cityscape.jpg",
-						"ipad-17-light.jpg",
+						"minimal-sand-dune.jpg",
+						"stray-legacy-file.jpg",
+						"aurora-solar-dusk.jpg",
+						"alpine-misty-pines.jpg",
 					],
 				})),
 			},
 		});
 
 		await expect(getAvailableWallpapers()).resolves.toEqual([
-			BUILT_IN_WALLPAPERS[2],
-			BUILT_IN_WALLPAPERS[4],
-			BUILT_IN_WALLPAPERS[15],
-			BUILT_IN_WALLPAPERS[16],
-			BUILT_IN_WALLPAPERS[23],
-			BUILT_IN_WALLPAPERS[24],
+			BUILT_IN_WALLPAPERS[1],
+			BUILT_IN_WALLPAPERS[7],
+			BUILT_IN_WALLPAPERS[22],
 		]);
 	});
 
@@ -57,16 +61,16 @@ describe("wallpapers", () => {
 			electronAPI: {
 				listAssetDirectory: vi.fn().mockResolvedValue({
 					success: true,
-					files: ["wallpaper2.jpg"],
+					files: ["aurora-solar-dusk.jpg"],
 				}),
 			},
 		});
 
-		await expect(resolveAvailableWallpaperPath("/wallpapers/midnight-8.jpg")).resolves.toBe(
+		await expect(resolveAvailableWallpaperPath("/wallpapers/tahoe-light.jpg")).resolves.toBe(
 			DEFAULT_WALLPAPER_PATH,
 		);
-		await expect(resolveAvailableWallpaperPath("/wallpapers/wallpaper2.jpg")).resolves.toBe(
-			"/wallpapers/wallpaper2.jpg",
+		await expect(resolveAvailableWallpaperPath("/wallpapers/aurora-solar-dusk.jpg")).resolves.toBe(
+			"/wallpapers/aurora-solar-dusk.jpg",
 		);
 	});
 

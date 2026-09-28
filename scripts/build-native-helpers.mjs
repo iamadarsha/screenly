@@ -28,7 +28,7 @@ function getTargetConfigs() {
 const helpers = [
 	{
 		source: "ScreenCaptureKitRecorder.swift",
-		output: "recordly-screencapturekit-helper",
+		output: "screenly-screencapturekit-helper",
 	},
 	{
 		source: "ScreenCaptureKitWindowList.swift",

@@ -22,8 +22,8 @@ describe("getAssetPath", () => {
 			},
 		});
 
-		await expect(getAssetPath("wallpapers/tahoe-light.jpg")).resolves.toBe(
-			"file:///Applications/Screenly.app/Contents/Resources/assets/wallpapers/tahoe-light.jpg",
+		await expect(getAssetPath("wallpapers/aurora-borealis-polar.jpg")).resolves.toBe(
+			"file:///Applications/Screenly.app/Contents/Resources/assets/wallpapers/aurora-borealis-polar.jpg",
 		);
 	});
 
@@ -35,8 +35,8 @@ describe("getAssetPath", () => {
 			},
 		});
 
-		await expect(getAssetPath("wallpapers/tahoe-light.jpg")).resolves.toBe(
-			"/wallpapers/tahoe-light.jpg",
+		await expect(getAssetPath("wallpapers/aurora-borealis-polar.jpg")).resolves.toBe(
+			"/wallpapers/aurora-borealis-polar.jpg",
 		);
 	});
 });

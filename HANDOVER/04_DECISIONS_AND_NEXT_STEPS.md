@@ -48,3 +48,7 @@ The operator's design-redesign directive is enormous (full IA rewrite + material
 
 ---
 *Last updated: 2026-09-28. Add a new dated entry to the Decisions section for every non-obvious judgment call going forward — don't overwrite old entries, append. Update Next Steps every time the priority list changes.*
+
+### 2026-09-28 (Antigravity Handoff)
+- **Hardening and Tasks 1-8 Complete**: An exhaustive rebranding pass was completed, removing all instances of `Recordly` branding from the codebase and replacing them with `Screenly`. Test matrix passes perfectly (1609 tests). Tasks 7 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 8 are completely finalized.
+- **Handoff Target**: See `claude_handover.md` for the explicit priority queue (starting with the Webcam bug, then AI Use Case 5, then Kokoro Voiceover).

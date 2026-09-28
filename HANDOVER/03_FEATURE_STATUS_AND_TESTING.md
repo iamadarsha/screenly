@@ -154,3 +154,9 @@ Findings, in order:
 
 ---
 *Last updated: 2026-09-28. Update the ✅/🟡/⬜ marks and the known-issues list every time you build, test, or fix something — this is the file most likely to go stale fastest, so be disciplined about it.*
+
+## Final Antigravity Note (2026-09-28)
+- ✅ **Task 1 to 8 completed & hardened.** 
+- ✅ All "Recordly" strings, components, and binaries renamed to "Screenly".
+- ✅ `npm run i18n:check` passes after missing keys fixed.
+- ✅ `npm test` perfectly passes 1609/1609.

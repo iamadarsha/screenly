@@ -597,6 +597,20 @@ export function useScreenRecorder(options?: UseScreenRecorderOptions): UseScreen
 				return false;
 			}
 
+			if (options.checkCamera && window.electronAPI?.getCameraPermissionStatus) {
+				const cameraStatus = await window.electronAPI.getCameraPermissionStatus();
+				if (cameraStatus.success && cameraStatus.status !== "granted") {
+					const requested = await window.electronAPI.requestCameraPermission?.();
+					if (!requested?.granted) {
+						await window.electronAPI.openCameraPreferences?.();
+						alert(
+							"Screenly needs Camera permission to record your webcam. System Settings has been opened. Please enable Camera access for Screenly.",
+						);
+						return false;
+					}
+				}
+			}
+
 			const accessibilityPermission =
 				await window.electronAPI.getAccessibilityPermissionStatus();
 			if (!accessibilityPermission.success) {
@@ -619,20 +633,6 @@ export function useScreenRecorder(options?: UseScreenRecorderOptions): UseScreen
 					? "Screenly also needs Accessibility permission for cursor tracking. System Settings has been opened. After enabling it, quit and reopen Screenly."
 					: "Accessibility permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Screenly before recording.",
 			);
-
-			if (options.checkCamera && window.electronAPI?.getCameraPermissionStatus) {
-				const cameraStatus = await window.electronAPI.getCameraPermissionStatus();
-				if (cameraStatus.success && cameraStatus.status !== "granted") {
-					const requested = await window.electronAPI.requestCameraPermission?.();
-					if (!requested?.granted) {
-						await window.electronAPI.openCameraPreferences?.();
-						alert(
-							"Screenly needs Camera permission to record your webcam. System Settings has been opened. Please enable Camera access for Screenly.",
-						);
-						return false;
-					}
-				}
-			}
 
 			return false;
 		},

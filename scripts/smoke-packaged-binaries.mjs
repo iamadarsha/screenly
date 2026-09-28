@@ -188,7 +188,7 @@ function getExpectedNativeHelperFiles(archTag) {
 	if (archTag.startsWith("darwin-")) {
 		return [
 			{
-				name: "recordly-screencapturekit-helper",
+				name: "screenly-screencapturekit-helper",
 				label: "ScreenCaptureKit helper",
 				executable: true,
 			},

@@ -20,22 +20,13 @@ export interface BuiltInWallpaper {
 const IMAGE_FILE_PATTERN = /\.(avif|gif|jpe?g|png|svg|webp)$/i;
 const VIDEO_FILE_PATTERN = /\.(avi|m4v|mkv|mov|mp4|webm)$/i;
 
-export const SCREENLY_STUDIO_WALLPAPERS: BuiltInWallpaper[] = [
-	createWallpaperEntry("abstract-flow-aurum.jpg", "Flow Aurum", "abstract"),
-	createWallpaperEntry("abstract-prism-mesh.jpg", "Prism Mesh", "abstract"),
-	createWallpaperEntry("abstract-silk-twilight.jpg", "Silk Twilight", "abstract"),
+export const BUILT_IN_WALLPAPERS: BuiltInWallpaper[] = [
 	createWallpaperEntry("aurora-borealis-polar.jpg", "Borealis Polar", "aurora"),
 	createWallpaperEntry("aurora-solar-dusk.jpg", "Solar Dusk", "aurora"),
 	createWallpaperEntry("aurora-emerald-night.jpg", "Emerald Night", "aurora"),
-	createWallpaperEntry("topographic-dark-contours.jpg", "Dark Contours", "topographic"),
-	createWallpaperEntry("topographic-light-relief.jpg", "Light Relief", "topographic"),
-	createWallpaperEntry("topographic-neon-elevation.jpg", "Neon Elevation", "topographic"),
-	createWallpaperEntry("cosmic-carina-nebula.jpg", "Carina Nebula", "cosmic"),
-	createWallpaperEntry("cosmic-deep-field.jpg", "Deep Field", "cosmic"),
-	createWallpaperEntry("cosmic-andromeda-core.jpg", "Andromeda Core", "cosmic"),
-	createWallpaperEntry("minimal-graphite-texture.jpg", "Graphite Texture", "minimal"),
-	createWallpaperEntry("minimal-sand-dune.jpg", "Sand Dune", "minimal"),
-	createWallpaperEntry("minimal-paper-fiber.jpg", "Paper Fiber", "minimal"),
+	createWallpaperEntry("abstract-flow-aurum.jpg", "Flow Aurum", "abstract"),
+	createWallpaperEntry("abstract-prism-mesh.jpg", "Prism Mesh", "abstract"),
+	createWallpaperEntry("abstract-silk-twilight.jpg", "Silk Twilight", "abstract"),
 	createWallpaperEntry("alpine-alpenglow-summit.jpg", "Alpenglow Summit", "alpine"),
 	createWallpaperEntry("alpine-misty-pines.jpg", "Misty Pines", "alpine"),
 	createWallpaperEntry("alpine-glacier-reflections.jpg", "Glacier Reflections", "alpine"),
@@ -45,47 +36,25 @@ export const SCREENLY_STUDIO_WALLPAPERS: BuiltInWallpaper[] = [
 	createWallpaperEntry("botanical-monstera-macro.jpg", "Monstera Macro", "botanical"),
 	createWallpaperEntry("botanical-fern-spirals.jpg", "Fern Spirals", "botanical"),
 	createWallpaperEntry("botanical-moss-lichen.jpg", "Moss & Lichen", "botanical"),
+	createWallpaperEntry("cosmic-carina-nebula.jpg", "Carina Nebula", "cosmic"),
+	createWallpaperEntry("cosmic-deep-field.jpg", "Deep Field", "cosmic"),
+	createWallpaperEntry("cosmic-andromeda-core.jpg", "Andromeda Core", "cosmic"),
+	createWallpaperEntry("topographic-dark-contours.jpg", "Dark Contours", "topographic"),
+	createWallpaperEntry("topographic-light-relief.jpg", "Light Relief", "topographic"),
+	createWallpaperEntry("topographic-neon-elevation.jpg", "Neon Elevation", "topographic"),
+	createWallpaperEntry("minimal-graphite-texture.jpg", "Graphite Texture", "minimal"),
+	createWallpaperEntry("minimal-sand-dune.jpg", "Sand Dune", "minimal"),
+	createWallpaperEntry("minimal-paper-fiber.jpg", "Paper Fiber", "minimal"),
 ];
 
-export const BUILT_IN_WALLPAPERS: BuiltInWallpaper[] = [
-	createWallpaperEntry("tahoe-light.jpg", "Tahoe Light"),
-	createWallpaperEntry("tahoe-dark.jpg", "Tahoe Dark"),
-	createWallpaperEntry("midnight-8.jpg", "Midnight 8"),
-	createWallpaperEntry("ipad-17-dark.jpg", "iPad 17 Dark"),
-	createWallpaperEntry("ipad-17-light.jpg", "iPad 17 Light"),
-	createWallpaperEntry("sequoia-blue.jpg", "Sequoia Blue"),
-	createWallpaperEntry("sequoia-blue-orange.jpg", "Sequoia Blue Orange"),
-	createWallpaperEntry("ventura.jpg", "Ventura"),
-	createWallpaperEntry("sonoma-clouds.jpg", "Sonoma Clouds"),
-	createWallpaperEntry("sonoma-light.jpg", "Sonoma Light"),
-	createWallpaperEntry("sonoma-dark.jpg", "Sonoma Dark"),
-	createWallpaperEntry("glassmorphism-3.jpg", "Glassmorphism 3"),
-	createWallpaperEntry("glassmorphism-4.jpg", "Glassmorphism 4"),
-	createWallpaperEntry("energy-19.jpg", "Energy 19"),
-	createWallpaperEntry("wallpaper3.jpg", "Wallpaper 3"),
-	createWallpaperEntry("wallpaper4.jpg", "Wallpaper 4"),
-	createWallpaperEntry("cityscape.jpg", "Cityscape"),
-	createWallpaperEntry("levels.jpg", "Levels"),
-	createWallpaperEntry("wallpaper10.jpg", "Wallpaper 10"),
-	createWallpaperEntry("ventura-dark.jpg", "Ventura Dark"),
-	createWallpaperEntry("sonoma-evening.jpg", "Sonoma Evening"),
-	createWallpaperEntry("sonoma-horizon.jpg", "Sonoma Horizon"),
-	createWallpaperEntry("iridescent-9.jpg", "Iridescent 9"),
-	createWallpaperEntry("energy-17.jpg", "Energy 17"),
-	createWallpaperEntry("wispysky.mp4", "Wispy Sky"),
-];
-
-export const ALL_CURATED_WALLPAPERS: BuiltInWallpaper[] = [
-	...SCREENLY_STUDIO_WALLPAPERS,
-	...BUILT_IN_WALLPAPERS,
-];
+export const ALL_CURATED_WALLPAPERS: BuiltInWallpaper[] = BUILT_IN_WALLPAPERS;
 
 export const WALLPAPER_PATHS = BUILT_IN_WALLPAPERS.map((wallpaper) => wallpaper.publicPath);
 export const WALLPAPER_RELATIVE_PATHS = BUILT_IN_WALLPAPERS.map(
 	(wallpaper) => wallpaper.relativePath,
 );
-export const DEFAULT_WALLPAPER_PATH = "/wallpapers/tahoe-light.jpg";
-export const DEFAULT_WALLPAPER_RELATIVE_PATH = "wallpapers/tahoe-light.jpg";
+export const DEFAULT_WALLPAPER_PATH = "/wallpapers/aurora-borealis-polar.jpg";
+export const DEFAULT_WALLPAPER_RELATIVE_PATH = "wallpapers/aurora-borealis-polar.jpg";
 
 function safeDecodeFileName(fileName: string) {
 	try {
