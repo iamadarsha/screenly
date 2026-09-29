@@ -1,3 +1,12 @@
+<!--
+  DEPRECATED as the icon source (2026-09-29): the operator supplied the real
+  brand logo directly (a raster render, not this hand-coded vector). The
+  actual master is now branding/source-assets/screenly-logo-master.png -
+  every icon variant (icons/icons/*, public/app-icons/*, docs/media/*) is
+  regenerated from THAT file, not this SVG. This file is kept only as a
+  historical reference for the shape construction; do not regenerate icons
+  from it.
+-->
 <svg width="1024" height="1024" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="g" x1="8%" y1="6%" x2="88%" y2="94%">
