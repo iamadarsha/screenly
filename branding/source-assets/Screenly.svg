@@ -1,48 +1,69 @@
 <svg width="1024" height="1024" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="6%" y1="8%" x2="90%" y2="92%">
-      <stop offset="0%" stop-color="#2FC7F4"/>
-      <stop offset="28%" stop-color="#3B6CF0"/>
-      <stop offset="52%" stop-color="#8B5CF6"/>
-      <stop offset="76%" stop-color="#EC4899"/>
-      <stop offset="100%" stop-color="#F59E0B"/>
+    <linearGradient id="g" x1="8%" y1="6%" x2="88%" y2="94%">
+      <stop offset="0%" stop-color="#22D3F7"/>
+      <stop offset="26%" stop-color="#3B6CF0"/>
+      <stop offset="50%" stop-color="#8B4CF0"/>
+      <stop offset="75%" stop-color="#F0338F"/>
+      <stop offset="100%" stop-color="#F5900A"/>
     </linearGradient>
-    <radialGradient id="dotg" cx="32%" cy="28%" r="78%">
-      <stop offset="0%" stop-color="#FF9A6B"/>
-      <stop offset="50%" stop-color="#F0466E"/>
-      <stop offset="100%" stop-color="#E0296E"/>
+    <radialGradient id="dotg" cx="32%" cy="26%" r="80%">
+      <stop offset="0%" stop-color="#FFB07A"/>
+      <stop offset="45%" stop-color="#F0466E"/>
+      <stop offset="100%" stop-color="#D81E5B"/>
+    </radialGradient>
+    <!-- Glossy specular highlight: a soft white ellipse riding the top-left of the ribbon. -->
+    <radialGradient id="gloss" cx="30%" cy="18%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="sheen" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1A1030" flood-opacity="0.28"/>
+    </filter>
   </defs>
-  <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+
   <!-- A single thick "S" ribbon: near-flat top bar (upper-right), a short steep
        diagonal waist, near-flat bottom bar (lower-left) - chunky proportions
        (large stroke relative to span, tight rounded joins) so it reads as a bold
-       woven ribbon, not a thin script "S".
+       woven ribbon. Rendered with a soft drop shadow + glossy specular overlay
+       for a polished, dimensional look rather than flat matte color.
        NOTE: this path is the horizontal mirror (x -> 512-x) of an earlier version
        that was mislabeled "S" but actually traced a "Z" - verified visually
-       against the rendered PNG before locking this in. Do not "simplify" this
-       back to the unmirrored coordinates without re-checking the render. -->
-  <path d="M 362 150
-           L 192 150
-           C 168 150, 152 166, 152 190
-           C 152 208, 162 222, 182 232
-           L 330 280
-           C 350 290, 360 304, 360 322
-           C 360 346, 344 362, 320 362
-           L 150 362"
-        fill="none" stroke="url(#g)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 362 150
-           L 192 150
-           C 168 150, 152 166, 152 190
-           C 152 208, 162 222, 182 232
-           L 330 280
-           C 350 290, 360 304, 360 322
-           C 360 346, 344 362, 320 362
-           L 150 362"
-        fill="none" stroke="url(#sheen)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-  <circle cx="112" cy="130" r="30" fill="url(#dotg)"/>
+       against the rendered PNG before locking this in. -->
+  <g filter="url(#softShadow)">
+    <path d="M 362 150
+             L 192 150
+             C 168 150, 152 166, 152 190
+             C 152 208, 162 222, 182 232
+             L 330 280
+             C 350 290, 360 304, 360 322
+             C 360 346, 344 362, 320 362
+             L 150 362"
+          fill="none" stroke="url(#g)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 362 150
+             L 192 150
+             C 168 150, 152 166, 152 190
+             C 152 208, 162 222, 182 232
+             L 330 280
+             C 350 290, 360 304, 360 322
+             C 360 346, 344 362, 320 362
+             L 150 362"
+          fill="none" stroke="url(#sheen)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+    <path d="M 362 150
+             L 192 150
+             C 168 150, 152 166, 152 190
+             C 152 208, 162 222, 182 232
+             L 330 280
+             C 350 290, 360 304, 360 322
+             C 360 346, 344 362, 320 362
+             L 150 362"
+          fill="none" stroke="url(#gloss)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="112" cy="130" r="30" fill="url(#dotg)"/>
+    <circle cx="103" cy="119" r="10" fill="#FFFFFF" opacity="0.5"/>
+  </g>
 </svg>

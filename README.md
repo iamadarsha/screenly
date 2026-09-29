@@ -1,25 +1,32 @@
-Language: EN | [简中](README.zh-CN.md)
+<div align="center">
 
-<p align="center">
-  <img width="220" alt="Screenly Logo" src="https://github.com/user-attachments/assets/414b8838-6731-45d4-a815-6e3c0aa1fe52" />
-</p>
+<img src="./docs/media/screenly-logo-256.png" width="112" alt="Screenly logo" />
 
-<p align="center">
-  <img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-111827?style=for-the-badge" alt="macOS Windows Linux" />
-  <img src="https://img.shields.io/badge/open%20source-AGPL3.0-2563eb?style=for-the-badge" alt="AGPL 3.0 license" />
-</p>
+# Screenly
 
-### Create polished demo videos in minutes
-Screenly is your **open-source, local-first screen recorder** and editor for **walkthroughs, demos, product videos**, and more.
-**Accepting PRs.**
+### Local-first screen recording, AI, and editing — polished demo videos in minutes
 
-<img width="1280" height="720" alt="MP4 to GIF export (4)" src="https://github.com/user-attachments/assets/e6d68606-5fc0-4f70-99cd-7521982dc13b" />
+Language: EN&nbsp;|&nbsp;[简中](README.zh-CN.md)
+
+<img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-111827?style=for-the-badge" alt="macOS Windows Linux" />
+<img src="https://img.shields.io/badge/open%20source-AGPL3.0-2563eb?style=for-the-badge" alt="AGPL 3.0 license" />
+<img src="https://img.shields.io/badge/on--device%20AI-8B4CF0?style=for-the-badge" alt="On-device AI" />
+
+**[Install](#installation)** &nbsp;·&nbsp; **[Features](#core-features)** &nbsp;·&nbsp; **[Releases](https://github.com/iamadarsha/screenly/releases)** &nbsp;·&nbsp; **[Contributing](CONTRIBUTING.md)**
+
+Screenly is your **open-source, local-first screen recorder** and editor for **walkthroughs, demos, product videos**, and more — with on-device AI (transcription, translation, and neural voiceover) that never leaves your machine. **Accepting PRs.**
+
+<br/>
+
+<img src="./docs/media/demo.gif" width="820" alt="Screenly full workflow demo: record, edit, export" />
+
+</div>
 
 ---
 
 ## What is Screenly?
 
-Screenly is a desktop app for recording and editing screen captures with motion-driven presentation tools built in. Instead of sending raw footage to a motion designer just to add zooms, cursor polish, or a styled background, Screenly handles that workflow in one place for free — plus on-device AI (transcription, translation, and neural voiceover) that never leaves your machine.
+Screenly is a desktop app for recording and editing screen captures with motion-driven presentation tools built in. Instead of sending raw footage to a motion designer just to add zooms, cursor polish, or a styled background, Screenly handles that workflow in one place for free.
 
 Screenly runs on:
 
@@ -37,32 +44,53 @@ Platform notes:
 
 # Core Features
 
-## Auto-zooms, cursor polish, and styled frames
-Screenly can automatically emphasize activity with zoom suggestions, smooth cursor movement, add motion effects, and place the final composition inside a styled frame with wallpapers, colors, gradients, blur, padding, and shadows.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-<p>
-  <img src="./docs/media/feature1.gif" width="450" alt="Screenly cursor and zoom demo video">
-</p>
+### 🎯 Auto-zooms & cursor polish
+Automatic zoom suggestions from cursor activity, smooth cursor movement, motion effects, and a styled frame with wallpapers, gradients, blur, padding, and shadows.
 
-## Dynamic webcam bubble overlays
-Add webcam footage as an overlay bubble, position it with presets or custom coordinates, mirror it, control shadow and roundness, and optionally make it react to zoom so it stays visually balanced during motion.
+<img src="./docs/media/feature1.gif" width="100%" alt="Screenly cursor and zoom demo" />
 
-<p>
-  <img src="./docs/media/feature2.gif" width="450" alt="Screenly webcam overlay demo video">
-</p>
+</td>
+<td width="50%" valign="top">
 
-## Timeline editing built for demos
-Use drag-and-drop timeline tools for zooms, trims, speed regions, annotations, extra audio regions, and crop-aware edits. Save and reopen work as `.screenly` project files.
+### 🎥 Dynamic webcam bubble overlays
+Overlay webcam footage as a bubble, position it with presets or custom coordinates, mirror it, style shadow and roundness, and make it react to zoom.
 
-<p>
-  <img width="450" alt="timeline editor" src="https://github.com/user-attachments/assets/3692bd8f-7b8d-4a93-b696-d17c828487ea" />
-</p>
+<img src="./docs/media/feature2.gif" width="100%" alt="Screenly webcam overlay demo" />
 
-## On-device AI: transcription, translation, and voiceover
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🖱️ Cursor sway & loop mode
+Cursor smoothing, motion blur, click bounce, sway, and a loop mode built for clean, seamlessly-looping exports.
+
+<img src="./docs/media/CursorSwayDemo.gif" width="100%" alt="Screenly cursor sway demo" />
+
+</td>
+<td width="50%" valign="top">
+
+### ✂️ Timeline editing built for demos
+Drag-and-drop tools for zooms, trims, speed regions, annotations, extra audio, and crop-aware edits. Save and reopen work as `.screenly` projects.
+
+<img src="./docs/media/CursorLoop.gif" width="100%" alt="Screenly timeline and cursor loop demo" />
+
+</td>
+</tr>
+</table>
+
+### 🧠 On-device AI: transcription, translation, and voiceover
 Screenly ships with local AI models (Whisper for transcription, Gemma for translation, and Kokoro for neural voiceover) that run entirely on-device — no footage or audio ever leaves your machine. Models download once and run offline after that; a built-in native-speech fallback is always available.
 
-## Extensions & Marketplace
+<p align="center">
+  <img src="./docs/media/feature3.png" width="640" alt="Screenly on-device AI tools panel" />
+</p>
 
+### 🧩 Extensions & Marketplace
 Screenly has a community-driven extension system. Anyone can build and publish extensions that add new capabilities to Screenly — cursor click sounds, device frames, browser mockups, wallpapers, render hooks, settings panels, and more.
 
 ---
@@ -150,22 +178,6 @@ Screenly has a community-driven extension system. Anyone can build and publish e
 - Feedback and issue links from the editor
 - Project persistence for editor preferences
 - Faster preview recovery after export
----
-
-# Screenshots
-
-<p align="center">
-  <img src="https://i.postimg.cc/8CrQtGJf/Screenshot-2026-04-30-at-5-11-52-pm.png" width="700" alt="Screenly recording interface screenshot">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/pLSMfrTM/Screenshot-2026-04-30-at-5-11-45-pm.png" width="700" alt="Screenly editor screenshot">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Screenly timeline screenshot">
-</p>
-
 ---
 
 # Installation

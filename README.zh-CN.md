@@ -1,19 +1,24 @@
+<div align="center">
+
+<img src="./docs/media/screenly-logo-256.png" width="112" alt="Screenly logo" />
+
+# Screenly
+
+### 本地优先的屏幕录制、AI 与剪辑 — 几分钟做出精致的演示视频
+
 语言: [EN](README.md) | 简中
 
-<p align="center">
-  <img width="220" alt="Screenly logo" src="https://github.com/user-attachments/assets/082bb4b0-5fc5-4e9f-abda-55611fd6aded" />
-</p>
+<img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-111827?style=for-the-badge" alt="macOS Windows Linux" />
+<img src="https://img.shields.io/badge/open%20source-AGPL3.0-2563eb?style=for-the-badge" alt="AGPL 3.0 license" />
+<img src="https://img.shields.io/badge/on--device%20AI-8B4CF0?style=for-the-badge" alt="On-device AI" />
 
-<p align="center">
-  <img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-111827?style=for-the-badge" alt="macOS Windows Linux" />
-  <img src="https://img.shields.io/badge/open%20source-AGPL3.0-2563eb?style=for-the-badge" alt="AGPL 3.0 license" />
-</p>
+[Screenly](https://github.com/iamadarsha/screenly) 是一款**开源、本地优先的屏幕录制器**和编辑器，适合制作**操作讲解、演示、产品视频**等内容，内置永不离开你设备的本地 AI（转录、翻译、配音）。**欢迎提交 PR。**
 
-### 无需额外剪辑，也能做出精致的屏幕录制。
-[Screenly](https://github.com/iamadarsha/screenly) 是一款**开源屏幕录制器**和编辑器，适合制作**操作讲解、演示、产品视频**等内容。  
-**欢迎提交 PR。**
+<br/>
 
-https://github.com/user-attachments/assets/9b66c71d-ac97-49ff-a0c9-63ac26edf2e4
+<img src="./docs/media/demo.gif" width="820" alt="Screenly 完整工作流演示：录制、剪辑、导出" />
+
+</div>
 
 ---
 
@@ -143,22 +148,6 @@ Screenly 拥有社区驱动的扩展生态，欢迎构建和发布扩展。
 - 在编辑器中直接打开反馈和问题链接
 - 编辑器偏好设置持久化
 - 导出后更快恢复预览
-
----
-
-# 截图
-
-<p align="center">
-  <img src="https://i.postimg.cc/8CrQtGJf/Screenshot-2026-04-30-at-5-11-52-pm.png" width="700" alt="Screenly recording interface screenshot">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/pLSMfrTM/Screenshot-2026-04-30-at-5-11-45-pm.png" width="700" alt="Screenly editor screenshot">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Screenly timeline screenshot">
-</p>
 
 ---
 
