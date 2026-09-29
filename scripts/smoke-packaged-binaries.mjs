@@ -177,7 +177,7 @@ function getExpectedNativeHelperFiles(archTag) {
 		];
 		if (archTag === "win32-x64") {
 			helpers.push({
-				name: "recordly-nvidia-cuda-compositor.exe",
+				name: "screenly-nvidia-cuda-compositor.exe",
 				label: "NVIDIA CUDA compositor helper",
 				executable: true,
 			});

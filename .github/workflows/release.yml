@@ -133,21 +133,29 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Validate macOS signing secrets
+      - name: Check macOS signing secrets
+        id: mac_signing_x64
         shell: bash
         env:
           APPLE_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_P12_BASE64 }}
           APPLE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_SIGNING_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
+          missing=()
           for name in APPLE_SIGNING_CERTIFICATE_P12_BASE64 APPLE_SIGNING_CERTIFICATE_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
             if [ -z "${!name:-}" ]; then
-              echo "Missing required macOS release secret: $name"
-              exit 1
+              missing+=("$name")
             fi
           done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::warning::Building an UNSIGNED macOS release - missing secrets: ${missing[*]}. Gatekeeper will warn users on first launch."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Prepare macOS signing certificate
+        if: steps.mac_signing_x64.outputs.signed == 'true'
         shell: bash
         env:
           APPLE_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_P12_BASE64 }}
@@ -178,6 +186,8 @@ jobs:
         run: npm run build:platform-native-helpers
 
       - name: Build macOS x64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ steps.mac_signing_x64.outputs.signed == 'true' && 'true' || 'false' }}
         run: |
           npx tsc
           npx vite build
@@ -235,21 +245,29 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Validate macOS signing secrets
+      - name: Check macOS signing secrets
+        id: mac_signing_arm64
         shell: bash
         env:
           APPLE_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_P12_BASE64 }}
           APPLE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_SIGNING_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
+          missing=()
           for name in APPLE_SIGNING_CERTIFICATE_P12_BASE64 APPLE_SIGNING_CERTIFICATE_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
             if [ -z "${!name:-}" ]; then
-              echo "Missing required macOS release secret: $name"
-              exit 1
+              missing+=("$name")
             fi
           done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::warning::Building an UNSIGNED macOS release - missing secrets: ${missing[*]}. Gatekeeper will warn users on first launch."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Prepare macOS signing certificate
+        if: steps.mac_signing_arm64.outputs.signed == 'true'
         shell: bash
         env:
           APPLE_SIGNING_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_SIGNING_CERTIFICATE_P12_BASE64 }}
@@ -280,6 +298,8 @@ jobs:
         run: npm run build:platform-native-helpers
 
       - name: Build macOS arm64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ steps.mac_signing_arm64.outputs.signed == 'true' && 'true' || 'false' }}
         run: |
           npx tsc
           npx vite build

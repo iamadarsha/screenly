@@ -22,8 +22,8 @@ const bundledDir = path.join(
 	"bin",
 	process.arch === "arm64" ? "win32-arm64" : "win32-x64",
 );
-const bundledExePath = path.join(bundledDir, "recordly-nvidia-cuda-compositor.exe");
-const helperId = "recordly-nvidia-cuda-compositor";
+const bundledExePath = path.join(bundledDir, "screenly-nvidia-cuda-compositor.exe");
+const helperId = "screenly-nvidia-cuda-compositor";
 const generatorArch = process.arch === "arm64" ? "ARM64" : "x64";
 const videoCodecSdkRoot =
 	process.env.RECORDLY_NVIDIA_VIDEO_CODEC_SDK_ROOT?.trim() ||
@@ -46,7 +46,7 @@ function fallbackToBundledHelperOrExit(reason) {
 			helperId,
 			sourceDir,
 			binaryPath: bundledExePath,
-			binaryName: "recordly-nvidia-cuda-compositor.exe",
+			binaryName: "screenly-nvidia-cuda-compositor.exe",
 		});
 		if (!verification.ok) {
 			console.warn(
@@ -273,7 +273,7 @@ try {
 	);
 }
 
-const exePath = path.join(buildDir, "Release", "recordly-nvidia-cuda-compositor.exe");
+const exePath = path.join(buildDir, "Release", "screenly-nvidia-cuda-compositor.exe");
 if (!existsSync(exePath)) {
 	console.error("[build-nvidia-cuda-compositor] Expected exe not found at", exePath);
 	process.exit(1);
@@ -287,6 +287,6 @@ const manifestPath = updateNativeHelperManifest({
 	helperId,
 	sourceDir,
 	binaryPath: bundledExePath,
-	binaryName: "recordly-nvidia-cuda-compositor.exe",
+	binaryName: "screenly-nvidia-cuda-compositor.exe",
 });
 console.log(`[build-nvidia-cuda-compositor] Updated helper manifest: ${manifestPath}`);

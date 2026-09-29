@@ -18,26 +18,31 @@
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
-  <!-- A single thick "S" ribbon: near-flat top bar, a short steep diagonal waist,
-       near-flat bottom bar — chunky proportions (large stroke relative to span,
-       tight rounded joins) so it reads as a bold woven ribbon, not a thin script "S". -->
-  <path d="M 150 150
-           L 320 150
-           C 344 150, 360 166, 360 190
-           C 360 208, 350 222, 330 232
-           L 182 280
-           C 162 290, 152 304, 152 322
-           C 152 346, 168 362, 192 362
-           L 362 362"
+  <!-- A single thick "S" ribbon: near-flat top bar (upper-right), a short steep
+       diagonal waist, near-flat bottom bar (lower-left) - chunky proportions
+       (large stroke relative to span, tight rounded joins) so it reads as a bold
+       woven ribbon, not a thin script "S".
+       NOTE: this path is the horizontal mirror (x -> 512-x) of an earlier version
+       that was mislabeled "S" but actually traced a "Z" - verified visually
+       against the rendered PNG before locking this in. Do not "simplify" this
+       back to the unmirrored coordinates without re-checking the render. -->
+  <path d="M 362 150
+           L 192 150
+           C 168 150, 152 166, 152 190
+           C 152 208, 162 222, 182 232
+           L 330 280
+           C 350 290, 360 304, 360 322
+           C 360 346, 344 362, 320 362
+           L 150 362"
         fill="none" stroke="url(#g)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 150 150
-           L 320 150
-           C 344 150, 360 166, 360 190
-           C 360 208, 350 222, 330 232
-           L 182 280
-           C 162 290, 152 304, 152 322
-           C 152 346, 168 362, 192 362
-           L 362 362"
+  <path d="M 362 150
+           L 192 150
+           C 168 150, 152 166, 152 190
+           C 152 208, 162 222, 182 232
+           L 330 280
+           C 350 290, 360 304, 360 322
+           C 360 346, 344 362, 320 362
+           L 150 362"
         fill="none" stroke="url(#sheen)" stroke-width="116" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-  <circle cx="400" cy="130" r="30" fill="url(#dotg)"/>
+  <circle cx="112" cy="130" r="30" fill="url(#dotg)"/>
 </svg>
