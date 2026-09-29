@@ -1,4 +1,5 @@
 import { AccountAvatar } from "@/components/ui/account-avatar";
+import { SIGN_IN_ENABLED, SIGN_IN_DISABLED_REASON } from "@/lib/authFeatureFlags";
 import type { User } from "@supabase/supabase-js";
 import { Camera, ClosedCaptioning, Cursor, Gear, FrameCorners } from "@/components/ui/icons";
 import {
@@ -110,11 +111,14 @@ export function EditorSidebar({
 						isIconOnly
 						className="mt-auto"
 						aria-label="Screenly account"
-						onPress={onAccountClick}
+						onPress={SIGN_IN_ENABLED ? onAccountClick : undefined}
+						isDisabled={!SIGN_IN_ENABLED && !accountUser}
 					>
 						<AccountAvatar user={accountUser} className="!size-7" />
 					</Button>
-					<Tooltip.Content placement="right">Account</Tooltip.Content>
+					<Tooltip.Content placement="right">
+						{accountUser ? "Account" : SIGN_IN_ENABLED ? "Account" : SIGN_IN_DISABLED_REASON}
+					</Tooltip.Content>
 				</Tooltip>
 			</nav>
 			<aside

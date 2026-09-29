@@ -1,4 +1,5 @@
 import { RecordNewButton } from "./RecordNewButton";
+import { SIGN_IN_ENABLED, SIGN_IN_DISABLED_REASON } from "@/lib/authFeatureFlags";
 import { RawPreview } from "./RawRecordings";
 import { Cloud, ImageSquare } from "@/components/ui/icons";
 
@@ -83,9 +84,15 @@ export function DashboardGrid({
 						<p>
 							{accountLabel
 								? "Shared videos are managed in your cloud library."
-								: "Sign in to manage shared videos."}
+								: SIGN_IN_ENABLED
+									? "Sign in to manage shared videos."
+									: SIGN_IN_DISABLED_REASON}
 						</p>
-						<Button variant="secondary" onClick={onSignIn}>
+						<Button
+							variant="secondary"
+							onClick={SIGN_IN_ENABLED ? onSignIn : undefined}
+							disabled={!SIGN_IN_ENABLED && !accountLabel}
+						>
 							{accountLabel ? "Account" : "Sign in"}
 						</Button>
 					</div>

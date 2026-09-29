@@ -13,6 +13,7 @@ import {
 	CaretLeft,
 } from "@/components/ui/icons";
 import { Tooltip, Switch, Label } from "@heroui/react";
+import { SIGN_IN_ENABLED, SIGN_IN_DISABLED_REASON } from "@/lib/authFeatureFlags";
 import { AccountAvatar } from "@/components/ui/account-avatar";
 import type { useI18n } from "@/contexts/I18nContext";
 import ExtensionManager from "../ExtensionManager";
@@ -280,8 +281,9 @@ export function EditorRightInspector({
 					<Tooltip>
 						<button
 							type="button"
-							onClick={onAccountClick}
-							className="flex items-center gap-2 p-1 rounded-lg text-xs hover:bg-white/10 dark:hover:bg-white/5 transition-colors interactive-target w-full"
+							onClick={SIGN_IN_ENABLED ? onAccountClick : undefined}
+							disabled={!SIGN_IN_ENABLED && !accountUser}
+							className="flex items-center gap-2 p-1 rounded-lg text-xs hover:bg-white/10 dark:hover:bg-white/5 transition-colors interactive-target w-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
 							aria-label="Account"
 						>
 							<AccountAvatar user={accountUser} className="!size-6 shrink-0" />
@@ -292,7 +294,7 @@ export function EditorRightInspector({
 							)}
 						</button>
 						<Tooltip.Content placement={isCollapsed ? "left" : "top"}>
-							{accountUser?.email ?? "Screenly Account"}
+							{accountUser?.email ?? (SIGN_IN_ENABLED ? "Screenly Account" : SIGN_IN_DISABLED_REASON)}
 						</Tooltip.Content>
 					</Tooltip>
 				</div>

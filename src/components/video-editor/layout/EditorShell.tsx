@@ -1,4 +1,5 @@
 import { AccountProfileContext } from "@/components/ui/account-avatar";
+import { SIGN_IN_ENABLED } from "@/lib/authFeatureFlags";
 import { DashboardSettingsContext } from "../dashboard/DashboardSettings";
 import { ScreenlySignInDialog, type SignInReason } from "@/components/auth/ScreenlySignInDialog";
 import { useScreenlyAuth } from "@/components/auth/useScreenlyAuth";
@@ -78,6 +79,7 @@ export function EditorShell(props: Props) {
 
 	const auth = useScreenlyAuth();
 	const requestSignIn = (reason: SignInReason) => {
+		if (!SIGN_IN_ENABLED) return;
 		if (reason === "share" && auth.user) {
 			setShareRequestNonce((value) => value + 1);
 			return;

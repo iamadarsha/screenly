@@ -1,4 +1,5 @@
 import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
+import { SIGN_IN_ENABLED, SIGN_IN_DISABLED_REASON } from "@/lib/authFeatureFlags";
 import { RecordNewButton } from "./RecordNewButton";
 import { SidebarCards } from "./SidebarCards";
 import { FolderRow } from "./FolderRow";
@@ -136,7 +137,11 @@ export function DashboardSidebar({
 				</div>
 				<div className="space-y-1 pt-6">
 					<SidebarCards />
-					<FeedbackDialog showLabel className={navClass(false)} onSignIn={onSignIn} />
+					<FeedbackDialog
+						showLabel
+						className={navClass(false)}
+						onSignIn={SIGN_IN_ENABLED ? onSignIn : undefined}
+					/>
 					<Button
 						variant="ghost"
 						className={navClass(section === "settings")}
@@ -149,7 +154,13 @@ export function DashboardSidebar({
 						/>
 						Settings
 					</Button>
-					<Button variant="ghost" className={navClass(false)} onClick={onSignIn}>
+					<Button
+						variant="ghost"
+						className={navClass(false)}
+						onClick={SIGN_IN_ENABLED ? onSignIn : undefined}
+						disabled={!SIGN_IN_ENABLED && !accountLabel}
+						title={!accountLabel && !SIGN_IN_ENABLED ? SIGN_IN_DISABLED_REASON : undefined}
+					>
 						<UserCircle weight="fill" className="size-[18px] shrink-0" />
 						<span className="truncate">{accountLabel || "Sign in"}</span>
 					</Button>

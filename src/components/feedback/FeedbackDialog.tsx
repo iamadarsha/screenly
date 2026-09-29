@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { ChatDots, File, X } from "@/components/ui/icons";
 import { feedbackDiagnostics } from "@/lib/feedback/diagnostics";
+import { SIGN_IN_ENABLED, SIGN_IN_DISABLED_REASON } from "@/lib/authFeatureFlags";
 import {
 	feedbackErrorMessage,
 	submitFeedback,
@@ -68,8 +69,12 @@ export function FeedbackDialog({
 					<Button onPress={() => setOpen(false)}>Done</Button>
 				) : !auth.user ? (
 					<div className="flex flex-col gap-4">
-						<Description>Sign in to send feedback.</Description>
-						{onSignIn ? (
+						<Description>
+							{SIGN_IN_ENABLED
+								? "Sign in to send feedback."
+								: `${SIGN_IN_DISABLED_REASON}. Feedback needs a signed-in account for now.`}
+						</Description>
+						{SIGN_IN_ENABLED && onSignIn ? (
 							<Button
 								onPress={() => {
 									setOpen(false);
@@ -78,9 +83,7 @@ export function FeedbackDialog({
 							>
 								Sign in
 							</Button>
-						) : (
-							<Description>Open Home to sign in.</Description>
-						)}
+						) : null}
 					</div>
 				) : (
 					<Form
