@@ -104,7 +104,17 @@ export function useRecordingLibrary(
 	const addToTimeline = async (paths: string | string[], index?: number) => {
 		const source = current.current.project.videoSourcePath;
 		let retainedSource = source;
-		if (lock.current || !source) return;
+		if (lock.current) return;
+		if (!source) {
+			// This project has no video yet, so there is nothing to append this
+			// recording onto (importRecording concatenates onto an existing
+			// source - it can't create one from scratch). Previously this just
+			// silently returned, which looked like a dead button to the user.
+			toast.error(
+				"Start a recording or open a project with a video first, then add clips from here.",
+			);
+			return;
+		}
 		lock.current = true;
 		cancelled.current = false;
 		setCancelling(false);
