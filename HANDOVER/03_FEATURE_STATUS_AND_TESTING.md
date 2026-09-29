@@ -185,3 +185,16 @@ Antigravity's handoff claimed Tasks 1-8 done but contradicted itself; everything
 - ✅ All "Recordly" strings, components, and binaries renamed to "Screenly".
 - ✅ `npm run i18n:check` passes after missing keys fixed.
 - ✅ `npm test` perfectly passes 1609/1609.
+
+## 2026-09-29 (Claude Code) — production readiness pass, final status
+
+- ✅ **Kokoro neural voiceover — now genuinely working, live-verified.** Root cause and fix in `HANDOVER/04_DECISIONS_AND_NEXT_STEPS.md`'s "fourth pass" entry. Verified against the real packaged app (build8): UI reported `7.1s • kokoro-onnx`, and the actual output `.wav` was independently confirmed via `afinfo` (7.075s, 24kHz mono Float32 — genuine neural TTS output, not the native-speech fallback). Test file deleted after verification.
+- ✅ Full regression green: `npm run typecheck` 0 errors, `npm run lint` 1 pre-existing warning (unrelated), `npm test` 186 files / 1625 tests.
+- ✅ `npm run build:mac` verified end-to-end this pass, both `arm64` and `x64`, producing real, installable `.dmg`/`.zip` artifacts (the "build7" failure earlier the same day was a transient codesign clock-skew error on retry, not a real defect).
+- ✅ **README.md / README.zh-CN.md / CONTRIBUTING.md / in-app issues link / CI workflow branding** — found still substantially "Recordly"-branded (including links to a nonexistent repo) and fixed. See `HANDOVER/04_DECISIONS_AND_NEXT_STEPS.md`'s "fifth pass" entry and commit `3cf1150`.
+- ✅ Real one-command installers added (`scripts/install.sh`, `scripts/install.ps1`) — work today against GitHub Releases with no additional infrastructure.
+- 🟡 **Homebrew tap / winget** — branding fixed but not wired to real infrastructure (no tap repo, no secrets, no winget submission). Not a "today" blocker since the curl/irm installers cover the same need.
+- 🟡 **Code signing / notarization** — deliberately shipping unsigned today per explicit operator decision. Documented consequences (Gatekeeper/SmartScreen warnings) in `SCREENLY_RELEASE_READINESS.md`.
+- ⬜ **`LICENSE.md`** still names "Recordly" in its trademark/copyright clauses — flagged for the operator, not edited (real legal/ownership question).
+- ⬜ **Cloud sharing** (`services/recordly-share/`, `videos.recordly.dev` allowlist) — still unrebranded and unresolved, same as previously documented; needs an explicit operator decision on where this service lives going forward.
+- ⬜ **Phase 6 hardening** (torture tests beyond the existing regression suite, real perf/memory measurements) — not done this pass; scope permitting, next.
